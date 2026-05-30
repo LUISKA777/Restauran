@@ -73,15 +73,37 @@ ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
 
--- Basic RLS policies (Example: users can only see data from their own restaurant)
+-- Basic RLS policies (Internal)
 CREATE POLICY "Users can see their restaurant data" ON profiles
     FOR SELECT USING (auth.uid() = id);
 
+-- PUBLIC POLICIES for Customer Menu
+-- Allow anyone to see restaurant names and settings
+CREATE POLICY "Public access to restaurant info" ON restaurants
+    FOR SELECT USING (true);
+
+-- Allow anyone to see available products
+CREATE POLICY "Public access to available products" ON products
+    FOR SELECT USING (is_available = true);
+
+-- Allow anyone to see restaurant tables (needed to validate the table selection)
+CREATE POLICY "Public access to restaurant tables" ON restaurant_tables
+    FOR SELECT USING (true);
+
+-- Allow customers to create orders
+CREATE POLICY "Public can create orders" ON orders
+    FOR INSERT WITH CHECK (true);
+
+-- Allow customers to create order items
+CREATE POLICY "Public can create order items" ON order_items
+    FOR INSERT WITH CHECK (true);
+
 -- Add branding settings to restaurants
 ALTER TABLE restaurants
-ADD COLUMN settings JSONB DEFAULT '{}'::jsonb;
+ADD COLUMN IF NOT EXISTS settings JSONB DEFAULT '{}'::jsonb;
 
 -- Atomic Order Creation Function for Customers
+-- Defined as SECURITY DEFINER to bypass RLS for the insert process if needed
 CREATE OR REPLACE FUNCTION create_customer_order(
     p_restaurant_id UUID,
     p_table_id UUID,
@@ -101,4 +123,4 @@ BEGIN
 
     RETURN v_order_id;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
