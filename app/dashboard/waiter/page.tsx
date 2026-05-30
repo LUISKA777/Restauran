@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import { Plus, ShoppingBag, User, Table, Send, RotateCcw, X } from 'lucide-react';
+import { Plus, ShoppingBag, User, Table, Send, RotateCcw, X, Package } from 'lucide-react';
 
 interface Product {
   id: string;
@@ -21,6 +21,8 @@ export default function WaiterPanel() {
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedTable, setSelectedTable] = useState<string | null>(null);
   const [customerName, setCustomerName] = useState('');
+  const [peopleCount, setPeopleCount] = useState(1);
+  const [isTakeaway, setIsTakeaway] = useState(false);
   const [cart, setCart] = useState<{ productId: string; quantity: number }[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -74,7 +76,7 @@ export default function WaiterPanel() {
   };
 
   async function sendOrder() {
-    if (!selectedTable || cart.length === 0) return;
+    if ((!selectedTable && !isTakeaway) || cart.length === 0) return;
 
     const restaurantId = localStorage.getItem('restaurant_id');
     if (!restaurantId) return;
@@ -84,10 +86,12 @@ export default function WaiterPanel() {
       .from('orders')
       .insert({
         restaurant_id: restaurantId,
-        table_id: selectedTable,
+        table_id: isTakeaway ? null : selectedTable,
         customer_name: customerName,
-        status: 'confirmed', // Sent directly to kitchen
-        total_price: 0 // Calculate later or let backend handle
+        status: 'confirmed',
+        total_price: 0,
+        is_takeaway: isTakeaway,
+        people_count: peopleCount
       })
       .select()
       .single();
@@ -113,6 +117,8 @@ export default function WaiterPanel() {
       setCart([]);
       setSelectedTable(null);
       setCustomerName('');
+      setPeopleCount(1);
+      setIsTakeaway(false);
     }
   }
 
@@ -141,32 +147,69 @@ export default function WaiterPanel() {
           {/* Table Selection */}
           <section className="space-y-4">
             <h2 className="text-lg font-semibold text-gray-700 flex items-center gap-2">
-              <Table size={20} /> Seleccionar Mesa
+              <Table size={20} /> Detalles del Pedido
             </h2>
-            <div className="grid grid-cols-4 gap-3">
-              {tables.map(table => (
-                <button
-                  key={table.id}
-                  onClick={() => setSelectedTable(table.id)}
-                  className={`p-4 rounded-xl border transition-all ${
-                    selectedTable === table.id
-                    ? 'bg-green-600 text-white border-green-600 shadow-lg ring-2 ring-green-200'
-                    : 'bg-white text-gray-600 border-gray-200 hover:border-green-500'
-                  }`}
-                >
-                  <span className="text-lg font-bold">{table.table_number}</span>
-                </button>
-              ))}
-            </div>
-            <div className="mt-4 space-y-2">
-              <label className="text-sm font-medium text-gray-600">Nombre del Cliente (Opcional)</label>
-              <input
-                type="text"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                className="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-green-500"
-                placeholder="Ej: Juan Perez"
-              />
+
+            <div className="space-y-4 bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
+                <div className="flex items-center gap-2">
+                  <Package size={18} className="text-gray-500" />
+                  <span className="text-sm font-medium text-gray-700">¿Es pedido para llevar?</span>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="sr-only peer"
+                    checked={isTakeaway}
+                    onChange={(e) => setIsTakeaway(e.target.checked)}
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                </label>
+              </div>
+
+              {!isTakeaway && (
+                <div className="space-y-3">
+                  <label className="text-sm font-medium text-gray-600 block">Seleccionar Mesa</label>
+                  <div className="grid grid-cols-4 gap-3">
+                    {tables.map(table => (
+                      <button
+                        key={table.id}
+                        onClick={() => setSelectedTable(table.id)}
+                        className={`p-4 rounded-xl border transition-all ${
+                          selectedTable === table.id
+                          ? 'bg-green-600 text-white border-green-600 shadow-lg ring-2 ring-green-200'
+                          : 'bg-white text-gray-600 border-gray-200 hover:border-green-500'
+                        }`}
+                      >
+                        <span className="text-lg font-bold">{table.table_number}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-600 block">Cliente (Opcional)</label>
+                  <input
+                    type="text"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    className="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-green-500"
+                    placeholder="Ej: Juan Perez"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-600 block">Nº Personas</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={peopleCount}
+                    onChange={(e) => setPeopleCount(parseInt(e.target.value) || 1)}
+                    className="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-green-500"
+                  />
+                </div>
+              </div>
             </div>
           </section>
 
@@ -218,8 +261,9 @@ export default function WaiterPanel() {
                   </div>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => updateQuantity(item.productId, -1)}
+                      onClick={() => removeFromCart(item.productId)}
                       className="p-1 text-gray-500 hover:text-red-600"
+                      title="Eliminar producto"
                     >
                       <X size={14} />
                     </button>
@@ -250,7 +294,7 @@ export default function WaiterPanel() {
 
           <button
             onClick={sendOrder}
-            disabled={!selectedTable || cart.length === 0}
+            disabled={(!selectedTable && !isTakeaway) || cart.length === 0}
             className="w-full py-4 bg-green-600 text-white font-bold rounded-2xl hover:bg-green-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Send size={20} /> Confirmar y Enviar a Cocina

@@ -1,16 +1,18 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Clock, CheckCircle, Flame, Package, Truck, RotateCcw } from 'lucide-react';
+import { Clock, CheckCircle, Flame, Package, Truck, RotateCcw, Users, UtensilsCrossed } from 'lucide-react';
 
 type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered';
 
 interface Order {
   id: string;
-  table_id: string;
+  table_id: string | null;
   customer_name: string;
   status: OrderStatus;
   created_at: string;
+  is_takeaway: boolean;
+  people_count: number;
   restaurant_tables?: { table_number: number };
   order_items?: any[];
 }
@@ -30,7 +32,6 @@ export default function KitchenBoard() {
   useEffect(() => {
     fetchOrders();
 
-    // Real-time subscription
     const channel = supabase
       .channel('kitchen_orders')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
@@ -102,7 +103,15 @@ export default function KitchenBoard() {
                   <div className={`p-4 flex justify-between items-center ${statusCfg.bg} ${statusCfg.text}`}>
                     <div className="flex items-center gap-2 font-bold">
                       <Icon size={20} />
-                      <span>Mesa {order.restaurant_tables?.table_number || 'N/A'}</span>
+                      <span>
+                        {order.is_takeaway ? (
+                          <span className="flex items-center gap-1 text-orange-700">
+                            <UtensilsCrossed size={16} /> Para Llevar
+                          </span>
+                        ) : (
+                          `Mesa ${order.restaurant_tables?.table_number || 'N/A'}`
+                        )}
+                      </span>
                     </div>
                     <span className="text-xs font-medium uppercase tracking-wider">
                       {order.status}
@@ -111,8 +120,14 @@ export default function KitchenBoard() {
 
                   <div className="p-4 space-y-4 flex-grow">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-slate-500">Cliente:</span>
-                      <span className="text-sm font-medium text-slate-900">{order.customer_name || 'Anónimo'}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-slate-500">Cliente:</span>
+                        <span className="text-sm font-medium text-slate-900">{order.customer_name || 'Anónimo'}</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-xs text-slate-400 font-medium">
+                        <Users size={14} />
+                        <span>{order.people_count || 1} pers.</span>
+                      </div>
                     </div>
 
                     <div className="space-y-2">
@@ -123,7 +138,7 @@ export default function KitchenBoard() {
                             <span className="text-slate-700">
                               <span className="font-bold mr-2">{item.quantity}x</span>
                               {item.products?.name}
-                            </span>
+                            </span
                             {item.products?.description && (
                               <span className="text-xs text-slate-400 italic truncate max-w-32">
                                 {item.products.description}
