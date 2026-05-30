@@ -1,0 +1,11 @@
+node_modules
+.next
+out
+build
+.env*.local
+.env
+.env.production
+.env.development
+.env.test
+.DS_Store
+*.log
