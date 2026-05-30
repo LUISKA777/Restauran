@@ -203,7 +203,7 @@ export default function MenuClient({
               </div>
               <div className="bg-white text-slate-900 px-4 py-2 rounded-2xl text-sm font-black transition-colors group-hover:bg-orange-100">
                 {cart.length} items | ₡{cartTotal.toFixed(0)}
-              </div
+              </div>
             </button>
           </div>
         </>
