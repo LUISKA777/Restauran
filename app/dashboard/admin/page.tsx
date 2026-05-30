@@ -79,16 +79,17 @@ export default function AdminDashboard() {
         const active = orders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled').length;
 
         // 2. Top Product
-        const { data: productCounts, error: pcError } = await supabase
+        const { data: orderItems, error: oiError } = await supabase
           .from('order_items')
-          .select('product_id, products(name)')
-          .limit(100);
+          .select('product_id, products(name), orders(restaurant_id)')
+          .eq('orders.restaurant_id', restaurantId);
 
         let bestName = 'N/A';
-        let max = 0;
-        if (productCounts) {
+        if (oiError) {
+          console.error('Error fetching top product:', oiError);
+        } else if (orderItems) {
           const counts: Record<string, {name: string, count: number}> = {};
-          productCounts.forEach(item => {
+          orderItems.forEach(item => {
             const product = Array.isArray(item.products) ? item.products[0] : item.products;
             const name = product?.name || 'Unknown';
             const id = item.product_id;
@@ -96,6 +97,7 @@ export default function AdminDashboard() {
             counts[id].count++;
           });
 
+          let max = 0;
           for (const id in counts) {
             if (counts[id].count > max) {
               max = counts[id].count;
