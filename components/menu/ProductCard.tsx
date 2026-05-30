@@ -16,30 +16,41 @@ interface ProductCardProps {
 
 export function ProductCard({ product, onAdd }: ProductCardProps) {
   return (
-    <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4 hover:border-[var(--color-primary)] transition-colors group">
-      <div className="w-20 h-20 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0">
+    <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden flex flex-col transition-all hover:shadow-md hover:border-[var(--color-primary)] group active:scale-[0.98]">
+      <div className="relative aspect-[4/3] overflow-hidden">
         {product.image_url ? (
-          <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
+          <img
+            src={product.image_url}
+            alt={product.name}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs text-center p-2">
-            Sin imagen
+          <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400">
+            <span className="text-xs font-medium uppercase tracking-wider">Sin imagen</span>
           </div>
         )}
+        <div className="absolute top-3 right-3">
+          <div className="bg-white/90 backdrop-blur-md px-3 py-1 rounded-full shadow-sm">
+            <span className="font-black text-slate-900 text-sm">₡{product.price.toFixed(0)}</span>
+          </div>
+        </div>
       </div>
-      <div className="flex-grow space-y-1">
-        <h3 className="font-bold text-gray-900 group-hover:text-[var(--color-primary)] transition-colors">
+
+      <div className="p-4 space-y-2">
+        <h3 className="font-bold text-slate-900 text-lg leading-tight group-hover:text-[var(--color-primary)] transition-colors">
           {product.name}
         </h3>
-        <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">
-          {product.description || 'Delicioso plato preparado especialmente para ti.'}
+        <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed min-h-[2.5rem]">
+          {product.description || 'Un sabor excepcional preparado con los mejores ingredientes.'}
         </p>
-        <div className="flex items-center justify-between mt-2">
-          <span className="font-extrabold text-gray-900">₡{product.price.toFixed(0)}</span>
+
+        <div className="pt-2">
           <button
             onClick={() => onAdd(product)}
-            className="p-1.5 bg-[var(--color-primary)] text-white rounded-full hover:scale-110 transition-transform shadow-sm"
+            className="w-full py-2.5 bg-[var(--color-primary)] text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:brightness-110 transition-all active:scale-95 shadow-sm"
           >
-            <Plus size={16} />
+            <Plus size={16} strokeWidth={3} />
+            Agregar al pedido
           </button>
         </div>
       </div>

@@ -7,7 +7,7 @@ import { CategoryNav } from '@/components/menu/CategoryNav';
 import { ProductCard } from '@/components/menu/ProductCard';
 import { CartModal } from '@/components/menu/CartModal';
 import { OrderSuccess } from '@/components/menu/OrderSuccess';
-import { ShoppingBag, Table as TableIcon } from 'lucide-react';
+import { ShoppingBag, Table as TableIcon, ChevronRight } from 'lucide-react';
 
 interface Product {
   id: string;
@@ -49,7 +49,7 @@ export default function MenuClient({
   const [showSuccess, setShowSuccess] = useState(false);
 
   const brandColors = useMemo(() => ({
-    primary: settings?.primaryColor || '#16a34a', // Default green-600
+    primary: settings?.primaryColor || '#16a34a',
     secondary: settings?.secondaryColor || '#ffffff',
     accent: settings?.accentColor || '#f3f4f6',
   }), [settings]);
@@ -119,7 +119,7 @@ export default function MenuClient({
 
   return (
     <div
-      className="min-h-screen bg-gray-50 flex flex-col"
+      className="min-h-screen bg-slate-50 flex flex-col"
       style={{
         '--color-primary': brandColors.primary,
         '--color-secondary': brandColors.secondary,
@@ -129,23 +129,31 @@ export default function MenuClient({
       <BrandingHeader name={restaurantName} settings={settings} />
 
       {!selectedTableId ? (
-        <main className="flex-grow p-6 space-y-8 flex flex-col items-center justify-center text-center">
-          <div className="space-y-3 max-w-md">
-            <div className="mx-auto w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-4">
-              <TableIcon size={32} />
+        <main className="flex-grow p-6 flex flex-col items-center justify-center text-center space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <div className="space-y-4 max-w-md">
+            <div className="mx-auto w-20 h-20 bg-white shadow-xl rounded-3xl flex items-center justify-center text-[var(--color-primary)] mb-6 rotate-3">
+              <TableIcon size={40} strokeWidth={2.5} />
             </div>
-            <h2 className="text-2xl font-black text-gray-900">¡Bienvenido!</h2>
-            <p className="text-gray-500">Para comenzar a pedir, por favor selecciona el número de tu mesa.</p>
+            <h2 className="text-4xl font-black text-slate-900 tracking-tight">
+              ¡Bienvenido a <br />
+              <span style={{ color: brandColors.primary }}>{restaurantName}</span>
+            </h2>
+            <p className="text-slate-500 text-lg font-medium">
+              Para comenzar a disfrutar, por favor selecciona el número de tu mesa.
+            </p>
           </div>
 
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 w-full max-w-xl">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 w-full max-w-2xl px-4">
             {tables.map(table => (
               <button
                 key={table.id}
                 onClick={() => setSelectedTableId(table.id)}
-                className="p-4 bg-white border-2 border-gray-100 rounded-2xl font-bold text-gray-700 hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-all shadow-sm active:scale-95"
+                className="group relative p-6 bg-white border-2 border-slate-100 rounded-3xl font-black text-slate-700 hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-all shadow-sm active:scale-95 overflow-hidden"
               >
-                Mesa {table.table_number}
+                <span className="relative z-10 text-2xl">{table.table_number}</span>
+                <div className="absolute -right-2 -bottom-2 opacity-10 group-hover:opacity-20 transition-opacity">
+                  <TableIcon size={48} />
+                </div>
               </button>
             ))}
           </div>
@@ -158,19 +166,20 @@ export default function MenuClient({
             onCategoryChange={setActiveCategory}
           />
 
-          <main className="flex-grow p-4 space-y-8 pb-24">
+          <main className="flex-grow p-4 space-y-8 pb-32 animate-in fade-in duration-500">
             <div className="flex justify-between items-center px-2">
-              <h2 className="text-xl font-black text-gray-900">
+              <h2 className="text-2xl font-black text-slate-900 tracking-tight">
                 {activeCategory}
               </h2>
               <button
                 onClick={() => setSelectedTableId(null)}
-                className="text-xs font-bold text-gray-400 hover:text-gray-600 underline transition-colors"
+                className="text-xs font-bold text-slate-400 hover:text-slate-600 flex items-center gap-1 transition-colors group"
               >
+                <ChevronRight size={14} className="rotate-180 group-hover:-translate-x-1 transition-transform" />
                 Cambiar Mesa
               </button>
             </div>
-            <div className="grid grid-cols-1 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               {(categoriesMap[activeCategory] || []).map((product: Product) => (
                 <ProductCard
                   key={product.id}
@@ -181,18 +190,20 @@ export default function MenuClient({
             </div>
           </main>
 
-          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-xs px-4">
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-md px-4">
             <button
               onClick={() => setIsCartOpen(true)}
-              className="w-full p-4 bg-[var(--color-primary)] text-white rounded-2xl shadow-xl flex items-center justify-between font-bold hover:scale-[1.02] active:scale-95 transition-all"
+              className="w-full p-5 bg-slate-900 text-white rounded-3xl shadow-2xl flex items-center justify-between font-bold hover:scale-[1.02] active:scale-95 transition-all group"
             >
-              <div className="flex items-center gap-2">
-                <ShoppingBag size={20} />
-                <span>Ver mi pedido</span>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white/10 rounded-xl group-hover:bg-white/20 transition-colors">
+                  <ShoppingBag size={22} />
+                </div>
+                <span className="text-lg">Ver mi pedido</span>
               </div>
-              <div className="bg-white/20 px-3 py-1 rounded-full text-sm">
+              <div className="bg-white text-slate-900 px-4 py-2 rounded-2xl text-sm font-black transition-colors group-hover:bg-orange-100">
                 {cart.length} items | ₡{cartTotal.toFixed(0)}
-              </div>
+              </div
             </button>
           </div>
         </>
