@@ -93,7 +93,7 @@ export default function ReportsPage() {
 
       const ordersWithTotals = (ordersData || []).map(order => ({
         ...order,
-        total_price: orderTotalsMap[order.id] || order.total_price || 0
+        total_price: orderTotalsMap[order.id] || 0
       }));
 
       setOrders(ordersWithTotals);
