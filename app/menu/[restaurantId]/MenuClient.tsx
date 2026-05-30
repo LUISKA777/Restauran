@@ -7,7 +7,7 @@ import { CategoryNav } from '@/components/menu/CategoryNav';
 import { ProductCard } from '@/components/menu/ProductCard';
 import { CartModal } from '@/components/menu/CartModal';
 import { OrderSuccess } from '@/components/menu/OrderSuccess';
-import { ShoppingBag } from 'lucide-react';
+import { ShoppingBag, Table as TableIcon } from 'lucide-react';
 
 interface Product {
   id: string;
@@ -17,6 +17,11 @@ interface Product {
   image_url: string;
 }
 
+interface Table {
+  id: string;
+  table_number: number;
+}
+
 interface MenuClientProps {
   restaurantName: string;
   settings: any;
@@ -24,7 +29,7 @@ interface MenuClientProps {
   categories: string[];
   categoriesMap: Record<string, Product[]>;
   restaurantId: string;
-  tableId: string;
+  tables: Table[];
 }
 
 export default function MenuClient({
@@ -34,8 +39,9 @@ export default function MenuClient({
   categories,
   categoriesMap,
   restaurantId,
-  tableId
+  tables
 }: MenuClientProps) {
+  const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState(categories[0] || 'General');
   const [cart, setCart] = useState<{ product: Product, quantity: number }[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -78,6 +84,11 @@ export default function MenuClient({
   [cart]);
 
   async function handleSubmitOrder() {
+    if (!selectedTableId) {
+      alert('Por favor, selecciona una mesa antes de enviar el pedido.');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const itemsPayload = cart.map(item => ({
@@ -88,7 +99,7 @@ export default function MenuClient({
 
       const { data, error } = await supabase.rpc('create_customer_order', {
         p_restaurant_id: restaurantId,
-        p_table_id: tableId,
+        p_table_id: selectedTableId,
         p_items: itemsPayload,
         p_total_price: cartTotal
       });
@@ -117,43 +128,75 @@ export default function MenuClient({
     >
       <BrandingHeader name={restaurantName} settings={settings} />
 
-      <CategoryNav
-        categories={categories}
-        activeCategory={activeCategory}
-        onCategoryChange={setActiveCategory}
-      />
+      {!selectedTableId ? (
+        <main className="flex-grow p-6 space-y-8 flex flex-col items-center justify-center text-center">
+          <div className="space-y-3 max-w-md">
+            <div className="mx-auto w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-4">
+              <TableIcon size={32} />
+            </div>
+            <h2 className="text-2xl font-black text-gray-900">¡Bienvenido!</h2>
+            <p className="text-gray-500">Para comenzar a pedir, por favor selecciona el número de tu mesa.</p>
+          </div>
 
-      <main className="flex-grow p-4 space-y-8 pb-24">
-        <section className="space-y-4">
-          <h2 className="text-xl font-black text-gray-900 px-2">
-            {activeCategory}
-          </h2>
-          <div className="grid grid-cols-1 gap-3">
-            {(categoriesMap[activeCategory] || []).map((product: Product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                onAdd={addToCart}
-              />
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 w-full max-w-xl">
+            {tables.map(table => (
+              <button
+                key={table.id}
+                onClick={() => setSelectedTableId(table.id)}
+                className="p-4 bg-white border-2 border-gray-100 rounded-2xl font-bold text-gray-700 hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-all shadow-sm active:scale-95"
+              >
+                Mesa {table.table_number}
+              </button>
             ))}
           </div>
-        </section>
-      </main>
+        </main>
+      ) : (
+        <>
+          <CategoryNav
+            categories={categories}
+            activeCategory={activeCategory}
+            onCategoryChange={setActiveCategory}
+          />
 
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-xs px-4">
-        <button
-          onClick={() => setIsCartOpen(true)}
-          className="w-full p-4 bg-[var(--color-primary)] text-white rounded-2xl shadow-xl flex items-center justify-between font-bold hover:scale-[1.02] active:scale-95 transition-all"
-        >
-          <div className="flex items-center gap-2">
-            <ShoppingBag size={20} />
-            <span>Ver mi pedido</span>
+          <main className="flex-grow p-4 space-y-8 pb-24">
+            <div className="flex justify-between items-center px-2">
+              <h2 className="text-xl font-black text-gray-900">
+                {activeCategory}
+              </h2>
+              <button
+                onClick={() => setSelectedTableId(null)}
+                className="text-xs font-bold text-gray-400 hover:text-gray-600 underline transition-colors"
+              >
+                Cambiar Mesa
+              </button>
+            </div>
+            <div className="grid grid-cols-1 gap-3">
+              {(categoriesMap[activeCategory] || []).map((product: Product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onAdd={addToCart}
+                />
+              ))}
+            </div>
+          </main>
+
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-xs px-4">
+            <button
+              onClick={() => setIsCartOpen(true)}
+              className="w-full p-4 bg-[var(--color-primary)] text-white rounded-2xl shadow-xl flex items-center justify-between font-bold hover:scale-[1.02] active:scale-95 transition-all"
+            >
+              <div className="flex items-center gap-2">
+                <ShoppingBag size={20} />
+                <span>Ver mi pedido</span>
+              </div>
+              <div className="bg-white/20 px-3 py-1 rounded-full text-sm">
+                {cart.length} items | ${cartTotal.toFixed(2)}
+              </div>
+            </button>
           </div>
-          <div className="bg-white/20 px-3 py-1 rounded-full text-sm">
-            {cart.length} items | ${cartTotal.toFixed(2)}
-          </div>
-        </button>
-      </div>
+        </>
+      )}
 
       <CartModal
         isOpen={isCartOpen}
