@@ -62,16 +62,12 @@ export default function AdminDashboard() {
       if (!restaurantId) return;
 
       try {
-        // 1. Total Revenue Today
-        const today = new Date();
-        today.setHours(0,0,0,0);
-
+        // 1. Total Revenue (All time)
         const { data: orders, error: ordersError } = await supabase
           .from('orders')
           .select('total_price, status')
           .eq('restaurant_id', restaurantId)
-          .neq('status', 'cancelled')
-          .gte('created_at', today.toISOString());
+          .neq('status', 'cancelled');
 
         if (ordersError) throw ordersError;
 
