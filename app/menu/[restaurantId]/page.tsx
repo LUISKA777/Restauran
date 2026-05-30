@@ -15,9 +15,19 @@ export default async function MenuPage({ params }: { params: { restaurantId: str
   if (restaurantError || !restaurant) {
     return (
       <div className="min-h-screen flex items-center justify-center p-6 text-center">
-        <div className="max-w-sm space-y-4">
+        <div className="max-w-md space-y-4 bg-white p-8 rounded-3xl border border-red-200 shadow-sm">
           <h1 className="text-2xl font-bold text-gray-900">Restaurante no encontrado</h1>
           <p className="text-gray-500">Lo sentimos, no pudimos encontrar la información del restaurante.</p>
+
+          <div className="mt-6 p-4 bg-red-50 rounded-xl border border-red-100 text-left space-y-2">
+            <p className="text-xs font-bold text-red-400 uppercase tracking-wider">Datos de diagnóstico:</p>
+            <p className="text-sm font-mono text-red-600 break-all">
+              <strong>ID buscado:</strong> {restaurantId}
+            </p>
+            <p className="text-sm font-mono text-red-600 break-all">
+              <strong>Error Supabase:</strong> {restaurantError?.message || 'No hay error, pero no se encontró el dato'}
+            </p>
+          </div>
         </div>
       </div>
     );
