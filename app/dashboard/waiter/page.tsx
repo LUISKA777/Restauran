@@ -336,7 +336,7 @@ export default function WaiterPanel() {
                 >
                   <div>
                     <p className="font-medium text-gray-800 group-hover:text-green-600 transition-colors">{product.name}</p>
-                    <p className="text-xs text-gray-400">${product.price}</p>
+                    <p className="text-xs text-gray-400">₡{product.price}</p>
                   </div>
                   <div className="p-1 bg-gray-100 rounded-full group-hover:bg-green-100 group-hover:text-green-600 transition-colors">
                     <Plus size={16} />
@@ -366,7 +366,7 @@ export default function WaiterPanel() {
                 <div key={item.productId} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
                   <div className="flex-grow">
                     <p className="text-sm font-medium text-gray-800">{product?.name}</p>
-                    <p className="text-xs text-gray-500">${product?.price}</p>
+                    <p className="text-xs text-gray-500">₡{product?.price}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
@@ -394,7 +394,7 @@ export default function WaiterPanel() {
           <div className="flex justify-between items-center">
             <span className="text-gray-500">Total Estimado</span>
             <span className="text-xl font-bold text-gray-900">
-              ${cart.reduce((acc, item) => {
+              ₡{cart.reduce((acc, item) => {
                 const p = products.find(prod => prod.id === item.productId);
                 return acc + (p?.price || 0) * item.quantity;
               }, 0).toFixed(2)}

@@ -113,7 +113,7 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <StatCard
             title="Ventas Hoy"
-            value="$1,240.00"
+            value="₡1,240.00"
             icon={<DollarSign />}
             color="text-green-600"
             bg="bg-green-100"
