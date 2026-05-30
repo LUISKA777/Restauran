@@ -83,7 +83,8 @@ export default function ReportsPage() {
 
       const filteredItems = itemsData?.filter(item => {
         if (!dateFilter) return true;
-        return new Date(item.orders.created_at) >= new Date(dateFilter);
+        const order = Array.isArray(item.orders) ? item.orders[0] : item.orders;
+        return order?.created_at && new Date(order.created_at) >= new Date(dateFilter);
       }) || [];
 
       const counts: Record<string, {name: string, count: number}> = {};
