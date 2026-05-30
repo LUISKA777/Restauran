@@ -84,11 +84,11 @@ export default function AdminDashboard() {
           .select('product_id, products(name)')
           .limit(100);
 
-        if (pcError) {
-          console.error('Error fetching top product:', pcError);
-        } else {
+        let bestName = 'N/A';
+        let max = 0;
+        if (productCounts) {
           const counts: Record<string, {name: string, count: number}> = {};
-          productCounts?.forEach(item => {
+          productCounts.forEach(item => {
             const product = Array.isArray(item.products) ? item.products[0] : item.products;
             const name = product?.name || 'Unknown';
             const id = item.product_id;
@@ -96,15 +96,12 @@ export default function AdminDashboard() {
             counts[id].count++;
           });
 
-          let bestName = 'N/A';
-          let max = 0;
           for (const id in counts) {
             if (counts[id].count > max) {
               max = counts[id].count;
               bestName = counts[id].name;
             }
           }
-          setStats(prev => ({ ...prev, topProduct: bestName }));
         }
 
         setStats({
