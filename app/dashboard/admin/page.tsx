@@ -72,7 +72,8 @@ export default function AdminDashboard() {
         if (odError) throw odError;
 
         const revenue = orderDetails.reduce((acc, item) => {
-          const price = item.products?.price || 0;
+          const product = Array.isArray(item.products) ? item.products[0] : item.products;
+          const price = product?.price || 0;
           return acc + (price * item.quantity);
         }, 0);
 
