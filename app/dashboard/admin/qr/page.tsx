@@ -8,24 +8,38 @@ import {
   ExternalLink,
   ArrowLeft,
   CheckCircle2,
-  Info
+  Info,
+  Globe,
+  Link as LinkIcon
 } from 'lucide-react';
 
 export default function QRCenter() {
   const router = useRouter();
   const [restaurantId, setRestaurantId] = useState<string | null>(null);
+  const [baseUrl, setBaseUrl] = useState('');
   const [menuUrl, setMenuUrl] = useState('');
 
   useEffect(() => {
     const id = localStorage.getItem('restaurant_id');
     if (id) {
       setRestaurantId(id);
-      // Construct the menu URL.
-      // In production, replace localhost:3000 with the actual domain.
-      const baseUrl = window.location.origin;
-      setMenuUrl(`${baseUrl}/menu/${id}`);
+      // Set a reasonable default: use production URL if we are on localhost
+      const origin = window.location.origin;
+      if (origin.includes('localhost')) {
+        setBaseUrl('https://restauran-navy.vercel.app');
+      } else {
+        setBaseUrl(origin);
+      }
     }
   }, []);
+
+  useEffect(() => {
+    if (restaurantId && baseUrl) {
+      // Ensure baseUrl doesn't have trailing slash
+      const cleanBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+      setMenuUrl(`${cleanBase}/menu/${restaurantId}`);
+    }
+  }, [restaurantId, baseUrl]);
 
   if (!restaurantId) {
     return (
@@ -51,7 +65,7 @@ export default function QRCenter() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row">
-      {/* Sidebar - Consistent with Admin Panel */}
+      {/* Sidebar */}
       <aside className="w-64 bg-slate-900 text-white p-6 flex flex-col space-y-8 hidden lg:flex">
         <div className="flex items-center gap-3 px-2">
           <div className="p-2 bg-orange-500 rounded-lg">
@@ -71,9 +85,9 @@ export default function QRCenter() {
 
       <main className="flex-grow p-6 lg:p-12 space-y-12">
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
+          <div className="space-y-1">
             <h1 className="text-3xl font-black text-slate-900">Centro de Control de QR</h1>
-            <p className="text-slate-500">Genera y gestiona la entrada digital a tu restaurante</p>
+            <p className="text-slate-500">Genera la puerta de entrada digital a tu restaurante</p>
           </div>
           <button
             onClick={() => window.open(menuUrl, '_blank')}
@@ -83,23 +97,77 @@ export default function QRCenter() {
           </button>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          {/* QR Display Card */}
-          <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-xl flex flex-col items-center text-center space-y-6">
-            <div className="p-4 bg-gray-50 rounded-2xl border-4 border-white shadow-inner">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+          {/* Left: Configuration & Preview */}
+          <div className="space-y-8">
+            <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg">
+                  <Globe size={20} />
+                </div>
+                <h2 className="text-xl font-bold text-slate-900">Configuración del Dominio</h2>
+              </div>
+
+              <div className="space-y-4">
+                <p className="text-sm text-slate-500">
+                  Para que el QR funcione en los celulares de tus clientes, debe apuntar a la URL de tu sitio publicado (ej. Vercel).
+                </p>
+                <div className="flex items-center gap-3">
+                  <div className="flex-grow relative">
+                    <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400">
+                      <LinkIcon size={18} />
+                    </div>
+                    <input
+                      type="text"
+                      value={baseUrl}
+                      onChange={(e) => setBaseUrl(e.target.value)}
+                      className="w-full pl-10 pr-4 py-3 border rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-mono text-sm"
+                      placeholder="https://tusitio.vercel.app"
+                    />
+                  </div>
+                </div>
+                <div className="p-3 bg-indigo-50 rounded-xl border border-indigo-100 flex gap-3">
+                  <Info size={18} className="text-indigo-500 shrink-0" />
+                  <p className="text-xs text-indigo-700 leading-relaxed">
+                    <strong className="font-bold">Importante:</strong> Si estás configurando esto desde tu computadora (localhost), asegúrate de escribir la dirección de tu sitio en Vercel para que los clientes puedan abrir el menú.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-green-100 text-green-600 rounded-lg">
+                  <CheckCircle2 size={20} />
+                </div>
+                <h2 className="text-xl font-bold text-slate-900">Vista Previa del Enlace</h2>
+              </div>
+              <div className="p-4 bg-slate-900 rounded-2xl text-indigo-400 font-mono text-sm break-all border border-slate-800 shadow-inner">
+                {menuUrl}
+              </div>
+            </div>
+          </div>
+
+          {/* Right: QR Display Card */}
+          <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-xl flex flex-col items-center text-center space-y-6 relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-4">
+              <div className="bg-orange-100 text-orange-600 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
+                Universal QR
+              </div>
+            </div>
+
+            <div className="p-6 bg-gray-50 rounded-3xl border-4 border-white shadow-2xl">
               <img
                 src={qrImageUrl}
                 alt="QR Menu"
                 className="w-64 h-64 object-contain"
               />
             </div>
-            <div>
-              <h3 className="text-lg font-bold text-slate-900">Tu Código QR Universal</h3>
-              <p className="text-sm text-slate-500 mt-1">Este código es el mismo para todas tus mesas</p>
-            </div>
-
-            <div className="w-full p-3 bg-slate-100 rounded-xl text-slate-600 text-xs font-mono break-all border border-slate-200">
-              {menuUrl}
+            <div className="space-y-2">
+              <h3 className="text-xl font-bold text-slate-900">Tu Código QR Digital</h3>
+              <p className="text-sm text-slate-500 max-w-xs">
+                Imprime este código y colócalo en tus mesas. Tus clientes podrán pedir directamente desde su celular.
+              </p>
             </div>
 
             <a
@@ -107,53 +175,13 @@ export default function QRCenter() {
               download="restaurant-qr.png"
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-2 px-8 py-3 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 transition-all shadow-lg active:scale-95"
+              className="w-full max-w-xs flex items-center justify-center gap-2 px-8 py-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 transition-all shadow-lg active:scale-95"
             >
               <Download size={20} /> Descargar Imagen QR
             </a>
-          </div>
-
-          {/* Instructions Card */}
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-slate-800">Guía de Implementación</h2>
-
-            <div className="space-y-4">
-              {[
-                {
-                  title: 'Impresión',
-                  text: 'Imprime este código en el tamaño que prefieras. Puedes ponerlo en la entrada o en cada mesa.',
-                  icon: <Download className="text-indigo-500" />
-                },
-                {
-                  title: 'Ubicación',
-                  text: 'Coloca el QR en un lugar visible y limpio. Recomendamos usar soportes de acrílico sobre las mesas.',
-                  icon: <TableProperties className="text-purple-500" />
-                },
-                {
-                  title: 'Experiencia',
-                  text: 'El cliente escanea, elige su mesa y comienza a pedir. ¡Todo ocurre en segundos!',
-                  icon: <CheckCircle2 className="text-green-500" />
-                }
-              ].map((step, i) => (
-                <div key={i} className="flex items-start gap-4 p-4 bg-white rounded-2xl border border-slate-200 hover:border-orange-300 transition-colors">
-                  <div className="p-2 bg-gray-50 rounded-lg">
-                    {step.icon}
-                  </div>
-                  <div className="space-y-1">
-                    <h4 className="font-bold text-slate-900">{step.title}</h4>
-                    <p className="text-sm text-slate-500">{step.text}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       </main>
     </div>
   );
-}
-
-// Simple mock for missing icon in this file
-function TableProperties(props: any) {
-  return <div className="w-5 h-5 border-2 border-current rounded-sm" {...props} />;
 }
