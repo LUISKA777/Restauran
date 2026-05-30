@@ -79,34 +79,32 @@ export default function AdminDashboard() {
         const active = orders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled').length;
 
         // 2. Top Product
-        const { data: topProd, error: topError } = await supabase
+        const { data: productCounts, error: pcError } = await supabase
           .from('order_items')
           .select('product_id, products(name)')
-          .eq('order_items.id', 'placeholder') // This is a dummy filter since we need to filter by restaurant_id via orders
-          ;
+          .limit(100);
 
-        // Correct way to get top product (simplest way for a dashboard)
-        const { data: productCounts } = await supabase
-          .from('order_items')
-          .select('product_id, products(name)')
-          .limit(100); // Sample last 100 to avoid heavy query
+        if (pcError) {
+          console.error('Error fetching top product:', pcError);
+        } else {
+          const counts: Record<string, {name: string, count: number}> = {};
+          productCounts?.forEach(item => {
+            const product = Array.isArray(item.products) ? item.products[0] : item.products;
+            const name = product?.name || 'Unknown';
+            const id = item.product_id;
+            if (!counts[id]) counts[id] = { name, count: 0 };
+            counts[id].count++;
+          });
 
-        const counts: Record<string, {name: string, count: number}> = {};
-        productCounts?.forEach(item => {
-          const product = Array.isArray(item.products) ? item.products[0] : item.products;
-          const name = product?.name || 'Unknown';
-          const id = item.product_id;
-          if (!counts[id]) counts[id] = { name, count: 0 };
-          counts[id].count++;
-        });
-
-        let bestName = 'N/A';
-        let max = 0;
-        for (const id in counts) {
-          if (counts[id].count > max) {
-            max = counts[id].count;
-            bestName = counts[id].name;
+          let bestName = 'N/A';
+          let max = 0;
+          for (const id in counts) {
+            if (counts[id].count > max) {
+              max = counts[id].count;
+              bestName = counts[id].name;
+            }
           }
+          setStats(prev => ({ ...prev, topProduct: bestName }));
         }
 
         setStats({
