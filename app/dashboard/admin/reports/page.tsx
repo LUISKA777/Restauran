@@ -90,7 +90,8 @@ export default function ReportsPage() {
 
       const counts: Record<string, {name: string, count: number}> = {};
       mostOrdered?.forEach(item => {
-        const name = item.products?.name || 'Unknown';
+        const product = Array.isArray(item.products) ? item.products[0] : item.products;
+        const name = product?.name || 'Unknown';
         const id = item.product_id;
         if (!counts[id]) counts[id] = { name, count: 0 };
         counts[id].count++;
