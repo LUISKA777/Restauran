@@ -185,9 +185,9 @@ export default function WaiterPanel() {
           <div className="flex items-center gap-3">
             <div className="p-2 bg-green-100 text-green-600 rounded-lg">
               <UserCheck size={24} />
-            </div}
+            </div>
             <h1 className="text-2xl font-bold text-gray-900">Panel de Mesero</h1>
-          </div}
+          </div>
           <button
             onClick={() => window.location.href = '/dashboard/role-selection'}
             className="px-4 py-2 bg-white border rounded-lg text-sm font-medium hover:bg-gray-50 flex items-center gap-2"
@@ -264,7 +264,7 @@ export default function WaiterPanel() {
                 <div className="flex items-center gap-2">
                   <Package size={18} className="text-gray-500" />
                   <span className="text-sm font-medium text-gray-700">¿Es pedido para llevar?</span>
-                </div}
+                </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
                     type="checkbox"
