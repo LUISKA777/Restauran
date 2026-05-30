@@ -30,7 +30,9 @@ export default async function MenuPage({ params }: { params: { token: string } }
     );
   }
 
-  const restaurant = tableData.restaurants;
+  const restaurant = Array.isArray(tableData.restaurants)
+    ? tableData.restaurants[0]
+    : tableData.restaurants;
   const restaurantId = tableData.restaurant_id;
   const tableId = tableData.id;
 

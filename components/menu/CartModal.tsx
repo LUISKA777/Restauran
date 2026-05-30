@@ -100,7 +100,7 @@ export function CartModal({
               {isSubmitting ? 'Enviando pedido...' : 'Confirmar y Enviar a Cocina'}
             </button>
           </div>
-        </div}
+        </div>
       </div>
     </div>
   );
