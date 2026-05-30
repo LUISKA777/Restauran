@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import { Plus, ShoppingBag, User, Table, Send, RotateCcw, X, Package, Bell, CheckCircle2 } from 'lucide-react';
+import { Plus, ShoppingBag, User, Users, Table, Send, RotateCcw, X, Package, Bell, CheckCircle2 } from 'lucide-react';
 import { Order } from '@/types/order';
 
 interface Product {
