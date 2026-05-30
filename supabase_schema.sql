@@ -77,5 +77,28 @@ ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can see their restaurant data" ON profiles
     FOR SELECT USING (auth.uid() = id);
 
--- Note: In a real production system, you'd create more complex RLS policies
--- based on the 'role' column in the profiles table.
+-- Add branding settings to restaurants
+ALTER TABLE restaurants
+ADD COLUMN settings JSONB DEFAULT '{}'::jsonb;
+
+-- Atomic Order Creation Function for Customers
+CREATE OR REPLACE FUNCTION create_customer_order(
+    p_restaurant_id UUID,
+    p_table_id UUID,
+    p_items JSONB, -- Array of {product_id, quantity, notes}
+    p_total_price DECIMAL
+) RETURNS UUID AS $$
+DECLARE
+    v_order_id UUID;
+BEGIN
+    INSERT INTO orders (restaurant_id, table_id, status, total_price)
+    VALUES (p_restaurant_id, p_table_id, 'confirmed', p_total_price)
+    RETURNING id INTO v_order_id;
+
+    INSERT INTO order_items (order_id, product_id, quantity, notes)
+    SELECT v_order_id, (item->>'product_id')::UUID, (item->>'quantity')::INT, item->>'notes'
+    FROM jsonb_array_elements(p_items) AS item;
+
+    RETURN v_order_id;
+END;
+$$ LANGUAGE plpgsql;
