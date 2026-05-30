@@ -2,7 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import { Plus, ShoppingBag, User, Table, Send, RotateCcw, X, Package } from 'lucide-react';
+import { Plus, ShoppingBag, User, Table, Send, RotateCcw, X, Package, Bell, CheckCircle2 } from 'lucide-react';
+import { Order } from '@/types/order';
 
 interface Product {
   id: string;
@@ -25,10 +26,33 @@ export default function WaiterPanel() {
   const [isTakeaway, setIsTakeaway] = useState(false);
   const [cart, setCart] = useState<{ productId: string; quantity: number }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [readyOrders, setReadyOrders] = useState<Order[]>([]);
+  const [notificationActive, setNotificationActive] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     fetchInitialData();
+    fetchReadyOrders();
+
+    // Real-time subscription for ready orders
+    const channel = supabase
+      .channel('waiter_notifications')
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'orders'
+      }, (payload) => {
+        if (payload.new?.status === 'ready') {
+          fetchReadyOrders();
+          setNotificationActive(true);
+          setTimeout(() => setNotificationActive(false), 5000);
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   async function fetchInitialData() {
@@ -49,6 +73,37 @@ export default function WaiterPanel() {
     setTables(tablesData || []);
     setProducts(productsData || []);
     setLoading(false);
+  }
+
+  async function fetchReadyOrders() {
+    const restaurantId = localStorage.getItem('restaurant_id');
+    if (!restaurantId) return;
+
+    const { data, error } = await supabase
+      .from('orders')
+      .select(`*, restaurant_tables(table_number), order_items(product_id, products(name, description), quantity)`)
+      .eq('restaurant_id', restaurantId)
+      .eq('status', 'ready')
+      .order('created_at', { ascending: true });
+
+    if (error) console.error('Error fetching ready orders:', error);
+    else if (data) setReadyOrders(data);
+  }
+
+  async function markAsDelivered(orderId: string) {
+    const { error } = await supabase
+      .from('orders')
+      .update({
+        status: 'delivered',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', orderId);
+
+    if (error) {
+      alert('Error al marcar como entregado');
+    } else {
+      fetchReadyOrders();
+    }
   }
 
   const addToCart = (productId: string) => {
@@ -81,7 +136,6 @@ export default function WaiterPanel() {
     const restaurantId = localStorage.getItem('restaurant_id');
     if (!restaurantId) return;
 
-    // 1. Create order
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .insert({
@@ -101,7 +155,6 @@ export default function WaiterPanel() {
       return;
     }
 
-    // 2. Create order items
     const orderItems = cart.map(item => ({
       order_id: order.id,
       product_id: item.productId,
@@ -126,15 +179,15 @@ export default function WaiterPanel() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row">
-      {/* Left side: Table and Menu selection */}
+      {/* Left side: Table, Menu and Ready Orders */}
       <div className="flex-grow p-6 space-y-6 overflow-y-auto">
         <header className="flex justify-between items-center">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-green-100 text-green-600 rounded-lg">
               <UserCheck size={24} />
-            </div>
+            </div}
             <h1 className="text-2xl font-bold text-gray-900">Panel de Mesero</h1>
-          </div>
+          </div}
           <button
             onClick={() => window.location.href = '/dashboard/role-selection'}
             className="px-4 py-2 bg-white border rounded-lg text-sm font-medium hover:bg-gray-50 flex items-center gap-2"
@@ -143,11 +196,67 @@ export default function WaiterPanel() {
           </button>
         </header>
 
+        {/* NOTIFICATION BANNER */}
+        {notificationActive && (
+          <div className="bg-green-600 text-white p-4 rounded-2xl shadow-lg flex items-center justify-between animate-bounce">
+            <div className="flex items-center gap-3">
+              <Bell className="animate-ring" />
+              <span className="font-bold">¡Hay pedidos listos para entregar!</span>
+            </div>
+            <button onClick={() => setNotificationActive(false)} className="text-white/80 hover:text-white">Cerrar</button>
+          </div>
+        )}
+
+        {/* READY ORDERS SECTION */}
+        <section className="space-y-4">
+          <h2 className="text-lg font-semibold text-gray-700 flex items-center gap-2">
+            <CheckCircle2 size={20} className="text-green-600" /> Pedidos Listos para Entregar
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {readyOrders.length === 0 ? (
+              <div className="col-span-full p-6 bg-gray-100 rounded-2xl text-center text-gray-400 border border-dashed border-gray-300">
+                No hay pedidos listos en este momento.
+              </div>
+            ) : (
+              readyOrders.map(order => (
+                <div key={order.id} className="bg-white p-4 rounded-2xl border-2 border-green-200 shadow-sm space-y-3 relative group hover:border-green-500 transition-colors">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <span className="text-xs font-bold uppercase text-green-600">
+                        {order.is_takeaway ? '🥡 Para Llevar' : `Mesa ${order.restaurant_tables?.table_number || 'N/A'}`}
+                      </span>
+                      <h3 className="font-bold text-gray-900">{order.customer_name || 'Anónimo'}</h3>
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-gray-500">
+                      <Users size={12} /> {order.people_count} pers.
+                    </div>
+                  </div>
+
+                  <div className="space-y-1 bg-gray-50 p-2 rounded-lg">
+                    {order.order_items?.map((item: any, idx: number) => (
+                      <div key={idx} className="text-xs flex justify-between text-gray-600">
+                        <span>{item.quantity}x {item.products?.name}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={() => markAsDelivered(order.id)}
+                    className="w-full py-2 bg-green-600 text-white text-sm font-bold rounded-xl hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <CheckCircle2 size={16} /> Marcar como Entregado
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        </section>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Table Selection */}
           <section className="space-y-4">
             <h2 className="text-lg font-semibold text-gray-700 flex items-center gap-2">
-              <Table size={20} /> Detalles del Pedido
+              <Table size={20} /> Detalles del Nuevo Pedido
             </h2>
 
             <div className="space-y-4 bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
@@ -155,7 +264,7 @@ export default function WaiterPanel() {
                 <div className="flex items-center gap-2">
                   <Package size={18} className="text-gray-500" />
                   <span className="text-sm font-medium text-gray-700">¿Es pedido para llevar?</span>
-                </div>
+                </div}
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
                     type="checkbox"

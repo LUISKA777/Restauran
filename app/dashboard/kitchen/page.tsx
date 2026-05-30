@@ -2,20 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Clock, CheckCircle, Flame, Package, Truck, RotateCcw, Users, UtensilsCrossed } from 'lucide-react';
-
-type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered';
-
-interface Order {
-  id: string;
-  table_id: string | null;
-  customer_name: string;
-  status: OrderStatus;
-  created_at: string;
-  is_takeaway: boolean;
-  people_count: number;
-  restaurant_tables?: { table_number: number };
-  order_items?: any[];
-}
+import { Order, OrderStatus } from '@/types/order';
 
 const STATUS_COLORS: Record<OrderStatus, { bg: string; text: string; icon: any }> = {
   pending: { bg: 'bg-gray-100', text: 'text-gray-600', icon: Clock },
@@ -164,13 +151,6 @@ export default function KitchenBoard() {
                       className="py-2 px-3 bg-white border rounded-lg text-xs font-medium hover:bg-green-50 hover:text-green-600 transition-colors disabled:opacity-50"
                     >
                       Listo / Entregar
-                    </button>
-                    <button
-                      onClick={() => updateStatus(order.id, 'delivered')}
-                      disabled={order.status === 'delivered'}
-                      className="col-span-2 py-2 px-3 bg-slate-800 text-white rounded-lg text-xs font-medium hover:bg-slate-900 transition-colors disabled:opacity-50"
-                    >
-                      Marcar como Entregado
                     </button>
                   </div>
                 </div>
