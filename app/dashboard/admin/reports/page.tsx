@@ -1,8 +1,17 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, BarChart3, TrendingUp, ShoppingBag, Clock, DollarSign } from 'lucide-react';
+import {
+  ArrowLeft,
+  BarChart3,
+  TrendingUp,
+  ShoppingBag,
+  Clock,
+  DollarSign,
+  Calendar,
+  Download
+} from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 interface Order {
@@ -13,116 +22,87 @@ interface Order {
   customer_name: string;
 }
 
+type TimeRange = 'today' | 'week' | 'month' | 'all';
+
 export default function ReportsPage() {
   const router = useRouter();
-  const [stats, setStats] = useState({
-    totalRevenue: 0,
-    totalOrders: 0,
-    topProduct: 'N/A',
-    avgOrderValue: 0
-  });
-  const [recentOrders, setRecentOrders] = useState<Order[]>([]);
+  const [range, setRange] = useState<TimeRange>('all');
   const [loading, setLoading] = useState(true);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [topProduct, setTopProduct] = useState('Cargando...');
 
   useEffect(() => {
-    fetchReports();
-  }, []);
+    fetchData();
+  }, [range]);
 
-  async function fetchReports() {
+  async function fetchData() {
     setLoading(true);
     const restaurantId = localStorage.getItem('restaurant_id');
-    if (!restaurantId) {
-      setLoading(false);
-      return;
-    }
+    if (!restaurantId) return;
 
     try {
-      // 1. Get total revenue and order count
-      const { data: ordersData, error: ordersError } = await supabase
+      // Calculate date filter
+      let dateFilter = '';
+      const now = new Date();
+      if (range === 'today') {
+        const start = new Date();
+        start.setHours(0,0,0,0);
+        dateFilter = start.toISOString();
+      } else if (range === 'week') {
+        const start = new Date();
+        start.setDate(now.getDate() - 7);
+        dateFilter = start.toISOString();
+      } else if (range === 'month') {
+        const start = new Date();
+        start.setMonth(now.getMonth() - 1);
+        dateFilter = start.toISOString();
+      }
+
+      // 1. Fetch Orders
+      let query = supabase
         .from('orders')
-        .select('total_price, id')
+        .select('*')
         .eq('restaurant_id', restaurantId)
         .neq('status', 'cancelled');
 
+      if (dateFilter) {
+        query = query.gte('created_at', dateFilter);
+      }
+
+      const { data: ordersData, error: ordersError } = await query;
       if (ordersError) throw ordersError;
+      setOrders(ordersData || []);
 
-      const revenue = ordersData.reduce((acc, order) => acc + (order.total_price || 0), 0);
-      const count = ordersData.length;
-      const avg = count > 0 ? revenue / count : 0;
-
-      // 2. Find top product
-      const { data: topProductData, error: topError } = await supabase
+      // 2. Fetch Top Product for this range
+      const { data: itemsData, error: itemsError } = await supabase
         .from('order_items')
-        .select('product_id, products(name)')
-        .eq('restaurant_id', restaurantId) // This might be wrong if order_items doesn't have restaurant_id
-        // Fixing this: We should join with orders or just use order_items and then filter.
-        // Correct way: Query order_items joined with orders
-        // .select('product_id, products(name)')
-        // .eq('orders.restaurant_id', restaurantId)
-        // But let's use a simpler approach since we already have the product table.
-        // Actually, I'll just do a count of product_ids in order_items for this restaurant's orders.
-        ;
+        .select('product_id, products(name), orders(created_at)')
+        .eq('orders.restaurant_id', restaurantId);
 
-      // Let's refine the top product query
-      const { data: topProd, error: topProdErr } = await supabase
-        .from('order_items')
-        .select('product_id, products(name)')
-        .eq('order_items.product_id', (await supabase.from('products').select('id').eq('restaurant_id', restaurantId).single()).data?.id) // This is wrong logic
-        ;
+      if (itemsError) throw itemsError;
 
-      // Simpler Top Product: a query that counts product_id
-      // Since we are in a client component and complex aggregations are hard without RPC,
-      // I will calculate it from the recently fetched data or a simplified query.
-
-      // Let's just get the top product by counting in the local list of order items if we had them.
-      // For now, let's just get the top product via a specific query.
-      const { data: productCounts, error: pcErr } = await supabase
-        .from('order_items')
-        .select('product_id, products(name)')
-        .eq('product_id', 'something'); // Place holder
-
-      // Wait, I'll just use a basic lapped query to get the most ordered product
-      const { data: mostOrdered, error: moErr } = await supabase
-        .from('order_items')
-        .select('product_id, products(name)')
-        .order('created_at', { ascending: false })
-        .limit(100); // Get last 100 items and count manually
+      const filteredItems = itemsData?.filter(item => {
+        if (!dateFilter) return true;
+        return new Date(item.orders.created_at) >= new Date(dateFilter);
+      }) || [];
 
       const counts: Record<string, {name: string, count: number}> = {};
-      mostOrdered?.forEach(item => {
-        const product = Array.isArray(item.products) ? item.products[0] : item.products;
-        const name = product?.name || 'Unknown';
+      filteredItems.forEach(item => {
+        const name = item.products?.name || 'Unknown';
         const id = item.product_id;
         if (!counts[id]) counts[id] = { name, count: 0 };
         counts[id].count++;
       });
 
-      let topName = 'N/A';
-      let maxCount = 0;
+      let bestName = 'N/A';
+      let max = 0;
       for (const id in counts) {
-        if (counts[id].count > maxCount) {
-          maxCount = counts[id].count;
-          topName = counts[id].name;
+        if (counts[id].count > max) {
+          max = counts[id].count;
+          bestName = counts[id].name;
         }
       }
-
-      // 3. Get recent orders
-      const { data: recents, error: recErr } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('restaurant_id', restaurantId)
-        .order('created_at', { ascending: false })
-        .limit(10);
-
-      if (recErr) throw recErr;
-
-      setStats({
-        totalRevenue: revenue,
-        totalOrders: count,
-        topProduct: topName,
-        avgOrderValue: avg
-      });
-      setRecentOrders(recents || []);
+      setTopProduct(bestName);
 
     } catch (err) {
       console.error('Error loading reports:', err);
@@ -130,6 +110,28 @@ export default function ReportsPage() {
       setLoading(false);
     }
   }
+
+  // Calculated Stats
+  const totalRevenue = useMemo(() => {
+    return orders.reduce((acc, o) => acc + (o.total_price || 0), 0);
+  }, [orders]);
+
+  const totalCount = orders.length;
+  const avgOrder = totalCount > 0 ? totalRevenue / totalCount : 0;
+
+  // Group by Day for the table
+  const dailySales = useMemo(() => {
+    const groups: Record<string, { revenue: number, count: number }> = {};
+    orders.forEach(order => {
+      const date = new Date(order.created_at).toLocaleDateString('es-CR', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+      });
+      if (!groups[date]) groups[date] = { revenue: 0, count: 0 };
+      groups[date].revenue += (order.total_price || 0);
+      groups[date].count++;
+    });
+    return Object.entries(groups).map(([date, data]) => ({ date, ...data }));
+  }, [orders]);
 
   if (loading) {
     return (
@@ -144,88 +146,144 @@ export default function ReportsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
-      <div className="flex items-center gap-4 mb-8">
-        <button
-          onClick={() => router.back()}
-          className="p-2 hover:bg-gray-200 rounded-full transition-colors"
-        >
-          <ArrowLeft size={20} />
-        </button>
-        <h1 className="text-3 la-font-bold text-slate-900 flex items-center gap-3">
-          <BarChart3 className="text-green-500" /> Reportes y Ventas
-        </h1>
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => router.back()}
+            className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+          >
+            <ArrowLeft size={20} />
+          </button>
+          <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
+            <BarChart3 className="text-green-500" /> Reportes y Ventas
+          </h1>
+        </div>
+        <div className="flex items-center gap-2 bg-white p-1 rounded-2xl border shadow-sm">
+          <button
+            onClick={() => setRange('today')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${range === 'today' ? 'bg-green-600 text-white shadow-md' : 'text-slate-500 hover:bg-gray-100'}`}
+          >
+            Hoy
+          </button>
+          <button
+            onClick={() => setRange('week')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${range === 'week' ? 'bg-green-600 text-white shadow-md' : 'text-slate-500 hover:bg-gray-100'}`}
+          >
+            Semana
+          </button>
+          <button
+            onClick={() => setRange('month')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${range === 'month' ? 'bg-green-600 text-white shadow-md' : 'text-slate-500 hover:bg-gray-100'}`}
+          >
+            Mes
+          </button>
+          <button
+            onClick={() => setRange('all')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${range === 'all' ? 'bg-green-600 text-white shadow-md' : 'text-slate-500 hover:bg-gray-100'}`}
+          >
+            Todo
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
         <StatCard
           title="Ingresos Totales"
-          value={`₡${stats.totalRevenue.toLocaleString()}`}
+          value={`₡${totalRevenue.toLocaleString()}`}
           icon={<DollarSign />}
           color="text-green-600"
           bg="bg-green-100"
         />
         <StatCard
-          title="Pedidos Totales"
-          value={stats.totalOrders.toString()}
+          title="Pedidos"
+          value={totalCount.toString()}
           icon={<ShoppingBag />}
           color="text-blue-600"
           bg="bg-blue-100"
         />
         <StatCard
           title="Producto Estrella"
-          value={stats.topProduct}
+          value={topProduct}
           icon={<TrendingUp />}
           color="text-orange-600"
           bg="bg-orange-100"
         />
         <StatCard
           title="Ticket Promedio"
-          value={`₡${Math.round(stats.avgOrderValue).toLocaleString()}`}
+          value={`₡${Math.round(avgOrder).toLocaleString()}`}
           icon={<Clock />}
           color="text-purple-600"
           bg="bg-purple-100"
         />
       </div>
 
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-slate-100">
-          <h2 className="text-xl font-bold text-slate-900">Pedidos Recientes</h2>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead className="bg-slate-50 border-b border-slate-200">
-              <tr>
-                <th className="px-6 py-4 text-sm font-bold text-slate-600">ID Pedido</th>
-                <th className="px-6 py-4 text-sm font-bold text-slate-600">Cliente</th>
-                <th className="px-6 py-4 text-sm font-bold text-slate-600">Estado</th>
-                <th className="px-6 py-4 text-sm font-bold text-slate-600 text-right">Total</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {recentOrders.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-6 py-20 text-center text-slate-400 italic">
-                    No hay pedidos registrados.
-                  </td>
-                </tr>
-              ) : (
-                recentOrders.map(order => (
-                  <tr key={order.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4 text-sm text-slate-500 font-mono">{order.id.substring(0, 8)}...</td>
-                    <td className="px-6 py-4 font-medium text-slate-900">{order.customer_name || 'Anónimo'}</td>
-                    <td className="px-6 py-4">
-                      <span className="text-xs font-bold uppercase px-2 py-1 rounded-full bg-slate-100 text-slate-600">
-                        {order.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right font-bold text-slate-900">
-                      ₡{order.total_price.toLocaleString()}
-                    </td>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Daily Breakdown */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+              <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                <Calendar size={20} className="text-green-600" /> Ventas por Día
+              </h2>
+              <button className="text-xs font-bold text-slate-400 hover:text-green-600 flex items-center gap-1 transition-colors">
+                <Download size={14} /> Exportar CSV
+              </button>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead className="bg-slate-50 border-b border-slate-200">
+                  <tr className="text-slate-600">
+                    <th className="px-6 py-4 text-sm font-bold">Fecha</th>
+                    <th className="px-6 py-4 text-sm font-bold text-center">Pedidos</th>
+                    <th className="px-6 py-4 text-sm font-bold text-right">Total Ventas</th>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {dailySales.length === 0 ? (
+                    <tr>
+                      <td colSpan={3} className="px-6 py-20 text-center text-slate-400 italic">
+                        No hay datos de ventas para el periodo seleccionado.
+                      </td>
+                    </tr>
+                  ) : (
+                    dailySales.map((day, i) => (
+                      <tr key={i} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-6 py-4 font-medium text-slate-900">{day.date}</td>
+                        <td className="px-6 py-4 text-center text-slate-600 font-bold">{day.count}</td>
+                        <td className="px-6 py-4 text-right font-black text-slate-900">₡{day.revenue.toLocaleString()}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        {/* Recent Orders List */}
+        <div className="space-y-6">
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+            <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+              <ShoppingBag size={20} className="text-green-600" /> Últimos Pedidos
+            </h2>
+            <div className="space-y-4">
+              {orders.slice(0, 5).map(order => (
+                <div key={order.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex justify-between items-center group hover:border-green-200 transition-colors">
+                  <div>
+                    <p className="text-sm font-bold text-slate-900">{order.customer_name || 'Anónimo'}</p>
+                    <p className="text-xs text-slate-400">{new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} la hora</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-black text-slate-900">₡{order.total_price.toLocaleString()}</p>
+                    <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-slate-200 text-slate-500">
+                      {order.status}
+                    </span>
+                  </div>
+                </div>
+              ))}
+              {orders.length === 0 && <p className="text-center text-slate-400 italic text-sm py-4">Sin pedidos recientes</p>}
+            </div>
+          </div>
         </div>
       </div>
     </div>

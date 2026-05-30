@@ -62,17 +62,27 @@ export default function AdminDashboard() {
       if (!restaurantId) return;
 
       try {
-        // 1. Total Revenue (All time)
-        const { data: orders, error: ordersError } = await supabase
+        // 1. Total Revenue (Fallback calculation using order_items)
+        const { data: orderDetails, error: odError } = await supabase
+          .from('order_items')
+          .select('quantity, products(price), orders(restaurant_id, status)')
+          .eq('orders.restaurant_id', restaurantId)
+          .neq('orders.status', 'cancelled');
+
+        if (odError) throw odError;
+
+        const revenue = orderDetails.reduce((acc, item) => {
+          const price = item.products?.price || 0;
+          return acc + (price * item.quantity);
+        }, 0);
+
+        const active = (await supabase
           .from('orders')
-          .select('total_price, status')
+          .select('id')
           .eq('restaurant_id', restaurantId)
-          .neq('status', 'cancelled');
-
-        if (ordersError) throw ordersError;
-
-        const revenue = orders.reduce((acc, o) => acc + (o.total_price || 0), 0);
-        const active = orders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled').length;
+          .neq('status', 'delivered')
+          .neq('status', 'cancelled')
+        ).data?.length || 0;
 
         // 2. Top Product
         const { data: orderItems, error: oiError } = await supabase
