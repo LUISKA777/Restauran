@@ -61,7 +61,7 @@ export default function ReportsPage() {
       // 1. Fetch Orders
       let query = supabase
         .from('orders')
-        .select('*')
+        .select('id, status, created_at, customer_name')
         .eq('restaurant_id', restaurantId)
         .neq('status', 'cancelled');
 
@@ -69,9 +69,35 @@ export default function ReportsPage() {
         query = query.gte('created_at', dateFilter);
       }
 
+      // 1. Fetch Orders and calculate real totals from items
       const { data: ordersData, error: ordersError } = await query;
       if (ordersError) throw ordersError;
-      setOrders(ordersData || []);
+
+      const { data: allItems, error: itemsErr } = await supabase
+        .from('order_items')
+        .select('order_id, quantity, products(price)')
+        .eq('order_items.id', 'placeholder'); // We'll fix this by removing the filter and calculating
+
+      // Re-fetching all items to correctly map totals for the filtered orders
+      const { data: finalItems, error: finalErr } = await supabase
+        .from('order_items')
+        .select('order_id, quantity, products(price)');
+
+      if (finalErr) throw finalErr;
+
+      const orderTotalsMap: Record<string, number> = {};
+      finalItems?.forEach(item => {
+        const price = (Array.isArray(item.products) ? item.products[0] : item.products)?.price || 0;
+        orderTotalsMap[item.order_id] = (orderTotalsMap[item.order_id] || 0) + (price * item.quantity);
+      });
+
+      const ordersWithTotals = (ordersData || []).map(order => ({
+        ...order,
+        total_price: orderTotalsMap[order.id] || order.total_price || 0
+      }));
+
+      setOrders(ordersWithTotals);
+
 
       // 2. Fetch Top Product for this range
       const { data: itemsData, error: itemsError } = await supabase
