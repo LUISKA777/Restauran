@@ -11,7 +11,8 @@ import {
   Settings,
   TrendingUp,
   ShoppingBag,
-  DollarSign
+  DollarSign,
+  QrCode
 } from 'lucide-react';
 
 export default function AdminDashboard() {
@@ -31,6 +32,13 @@ export default function AdminDashboard() {
       icon: <TableProperties />,
       color: 'bg-purple-500',
       description: 'Crea mesas y genera códigos QR de acceso.'
+    },
+    {
+      name: 'Centro de QR',
+      path: '/dashboard/admin/qr',
+      icon: <QrCode />,
+      color: 'bg-indigo-500',
+      description: 'Genera y descarga el QR universal de tu menú.'
     },
     {
       name: 'Menú de Productos',
