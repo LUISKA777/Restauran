@@ -1,3 +1,4 @@
+"use client";
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { LayoutDashboard, UtensilsCrossed, UserCheck, ChevronRight } from 'lucide-react';

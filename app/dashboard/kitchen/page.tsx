@@ -1,3 +1,4 @@
+"use client";
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Clock, CheckCircle, Flame, Package, Truck, RotateCcw } from 'lucide-react';
@@ -10,7 +11,8 @@ interface Order {
   customer_name: string;
   status: OrderStatus;
   created_at: string;
-  items: any[];
+  restaurant_tables?: { table_number: number };
+  order_items?: any[];
 }
 
 const STATUS_COLORS: Record<OrderStatus, { bg: string; text: string; icon: any }> = {
