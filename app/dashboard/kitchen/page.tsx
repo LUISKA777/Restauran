@@ -138,7 +138,7 @@ export default function KitchenBoard() {
                             <span className="text-slate-700">
                               <span className="font-bold mr-2">{item.quantity}x</span>
                               {item.products?.name}
-                            </span
+                            </span>
                             {item.products?.description && (
                               <span className="text-xs text-slate-400 italic truncate max-w-32">
                                 {item.products.description}
