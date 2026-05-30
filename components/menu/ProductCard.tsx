@@ -34,7 +34,7 @@ export function ProductCard({ product, onAdd }: ProductCardProps) {
           {product.description || 'Delicioso plato preparado especialmente para ti.'}
         </p>
         <div className="flex items-center justify-between mt-2">
-          <span className="font-extrabold text-gray-900">${product.price.toFixed(2)}</span>
+          <span className="font-extrabold text-gray-900">₡{product.price.toFixed(0)}</span>
           <button
             onClick={() => onAdd(product)}
             className="p-1.5 bg-[var(--color-primary)] text-white rounded-full hover:scale-110 transition-transform shadow-sm"

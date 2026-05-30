@@ -270,7 +270,7 @@ export default function AdminMenuPage() {
                     <div className="flex items-center gap-2 text-xs text-slate-500">
                       <span className="bg-slate-100 px-2 py-0.5 rounded-md">{product.category || 'General'}</span>
                       <span>•</span>
-                      <span className="font-bold text-slate-700">${product.price.toFixed(2)}</span>
+                      <span className="font-bold text-slate-700">₡{product.price.toFixed(0)}</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -338,7 +338,7 @@ export default function AdminMenuPage() {
 
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                  <DollarSign size={16} /> Precio ($)
+                  <DollarSign size={16} /> Precio (₡)
                 </label>
                 <input
                   type="number"

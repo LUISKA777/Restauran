@@ -191,7 +191,7 @@ export default function MenuClient({
                 <span>Ver mi pedido</span>
               </div>
               <div className="bg-white/20 px-3 py-1 rounded-full text-sm">
-                {cart.length} items | ${cartTotal.toFixed(2)}
+                {cart.length} items | ₡{cartTotal.toFixed(0)}
               </div>
             </button>
           </div>

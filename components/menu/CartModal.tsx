@@ -61,7 +61,7 @@ export function CartModal({
                 <div key={item.product.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-2xl border border-gray-100">
                   <div className="flex-grow">
                     <p className="text-sm font-bold text-gray-800">{item.product.name}</p>
-                    <p className="text-xs text-gray-500">${item.product.price.toFixed(2)} c/u</p>
+                    <p className="text-xs text-gray-500">₡{item.product.price.toFixed(0)} c/u</p>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-2 py-1">
@@ -90,7 +90,7 @@ export function CartModal({
           <div className="pt-4 border-t border-gray-100 space-y-4">
             <div className="flex justify-between items-center">
               <span className="text-gray-500 font-medium">Total Estimado</span>
-              <span className="text-2xl font-black text-gray-900">${total.toFixed(2)}</span>
+              <span className="text-2xl font-black text-gray-900">₡{total.toFixed(0)}</span>
             </div>
             <button
               onClick={onSubmit}
