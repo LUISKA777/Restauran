@@ -2,8 +2,8 @@ import React from 'react';
 import { supabase } from '@/lib/supabase';
 import MenuClient from './MenuClient';
 
-export default async function MenuPage({ params }: { params: { restaurantId: string } }) {
-  const { restaurantId } = params;
+export default async function MenuPage({ params }: { params: Promise<{ restaurantId: string }> }) {
+  const { restaurantId } = await params;
 
   // 1. Get restaurant info
   const { data: restaurant, error: restaurantError } = await supabase
