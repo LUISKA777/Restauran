@@ -47,6 +47,7 @@ export default function MenuClient({
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [orderNotes, setOrderNotes] = useState('');
 
   const brandColors = useMemo(() => ({
     primary: settings?.primaryColor || '#16a34a',
@@ -101,13 +102,15 @@ export default function MenuClient({
         p_restaurant_id: restaurantId,
         p_table_id: selectedTableId,
         p_items: itemsPayload,
-        p_total_price: cartTotal
+        p_total_price: cartTotal,
+        p_notes: orderNotes // Assuming the RPC accepts p_notes
       });
 
       if (error) throw error;
 
       setShowSuccess(true);
       setCart([]);
+      setOrderNotes('');
       setIsCartOpen(false);
     } catch (err) {
       console.error('Error creating order:', err);
@@ -127,7 +130,7 @@ export default function MenuClient({
       } as React.CSSProperties}
     >
       {/* Enhanced Atmospheric Background */}
-      <div className="fixed inset-0 z-[-1] pointer-events-none overflow-hidden">
+      <div className="fixed inset-0 z-[-1] pointer-events-none overflow-hidden" style={{ backgroundColor: settings?.backgroundColor || '#f8fafc' }}>
         {/* Base color gradient to prevent pure white */}
         <div
           className="absolute inset-0 opacity-30"
@@ -153,7 +156,12 @@ export default function MenuClient({
         )}
 
         {/* Subtle Overlay for Readability */}
-        <div className="absolute inset-0 bg-white/60 backdrop-blur-sm" />
+        <div
+          className="absolute inset-0 backdrop-blur-sm"
+          style={{
+            backgroundColor: settings?.backgroundColor === '#0f172a' ? 'rgba(15, 23, 42, 0.6)' : 'rgba(255, 255, 255, 0.6)'
+          }}
+        />
       </div>
 
       <BrandingHeader name={restaurantName} settings={settings} />
@@ -248,6 +256,8 @@ export default function MenuClient({
         onSubmit={handleSubmitOrder}
         isSubmitting={isSubmitting}
         total={cartTotal}
+        orderNotes={orderNotes}
+        setOrderNotes={setOrderNotes}
       />
 
       {showSuccess && (

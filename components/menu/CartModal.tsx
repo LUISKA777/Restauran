@@ -21,6 +21,19 @@ interface CartModalProps {
   total: number;
 }
 
+interface CartModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  items: CartItem[];
+  onUpdateQuantity: (id: string, delta: number) => void;
+  onRemove: (id: string) => void;
+  onSubmit: () => void;
+  isSubmitting: boolean;
+  total: number;
+  orderNotes: string;
+  setOrderNotes: (notes: string) => void;
+}
+
 export function CartModal({
   isOpen,
   onClose,
@@ -29,7 +42,9 @@ export function CartModal({
   onRemove,
   onSubmit,
   isSubmitting,
-  total
+  total,
+  orderNotes,
+  setOrderNotes
 }: CartModalProps) {
   if (!isOpen) return null;
 
@@ -51,7 +66,7 @@ export function CartModal({
             </button>
           </div>
 
-          <div className="max-h-80 overflow-y-auto space-y-3 pr-2">
+          <div className="max-h-60 overflow-y-auto space-y-3 pr-2">
             {items.length === 0 ? (
               <div className="text-center py-10 text-gray-400 italic">
                 Tu carrito está vacío. ¡Agrega algo rico!
@@ -85,6 +100,18 @@ export function CartModal({
                 </div>
               ))
             )}
+          </div>
+
+          <div className="space-y-3">
+            <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
+              Notas especiales (Alergias, ingredientes, etc.)
+            </label>
+            <textarea
+              value={orderNotes}
+              onChange={(e) => setOrderNotes(e.target.value)}
+              placeholder="Ej: Por favor, sin cebolla en el plato fuerte..."
+              className="w-full p-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-[var(--color-primary)] transition-all min-h-[80px] resize-none"
+            />
           </div>
 
           <div className="pt-4 border-t border-gray-100 space-y-4">

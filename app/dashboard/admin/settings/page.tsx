@@ -33,6 +33,7 @@ export default function BrandSettingsPage() {
     accentColor: '#f3f4f6',
     logoUrl: '',
     backgroundImageUrl: '',
+    backgroundColor: '#f8fafc',
     categories: ['General', 'Bebidas', 'Platos Fuertes']
   });
 
@@ -60,6 +61,7 @@ export default function BrandSettingsPage() {
         accentColor: data.settings.accentColor || '#f3f4f6',
         logoUrl: data.settings.logoUrl || '',
         backgroundImageUrl: data.settings.backgroundImageUrl || '',
+        backgroundColor: data.settings.backgroundColor || '#f8fafc',
         categories: data.settings.categories || ['General']
       });
     }
@@ -259,6 +261,51 @@ export default function BrandSettingsPage() {
                     </div>
                   </div>
                 </div>
+                <div className="space-y-3">
+                  <label className="text-sm font-bold text-slate-600 flex items-center gap-2">
+                    Color de Fondo del Menú
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      value={settings.backgroundColor}
+                      onChange={(e) => setSettings({ ...settings, backgroundColor: e.target.value })}
+                      className="w-12 h-12 rounded-lg cursor-pointer bg-transparent border-none"
+                    />
+                    <input
+                      type="text"
+                      value={settings.backgroundColor}
+                      onChange={(e) => setSettings({ ...settings, backgroundColor: e.target.value })}
+                      className="flex-grow px-3 py-2 border rounded-xl text-sm font-mono"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <label className="text-sm font-bold text-slate-600 flex items-center gap-2">
+                    Modo Sugerido
+                  </label>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setSettings({ ...settings, backgroundColor: '#ffffff' })}
+                      className="px-3 py-1 bg-white border rounded-lg text-xs font-medium hover:bg-gray-50"
+                    >
+                      Claro
+                    </button>
+                    <button
+                      onClick={() => setSettings({ ...settings, backgroundColor: '#0f172a' })}
+                      className="px-3 py-1 bg-slate-900 text-white border rounded-lg text-xs font-medium hover:bg-slate-800"
+                    >
+                      Oscuro
+                    </button>
+                    <button
+                      onClick={() => setSettings({ ...settings, backgroundColor: '#fdf2f8' })}
+                      className="px-3 py-1 bg-pink-50 text-pink-600 border rounded-lg text-xs font-medium hover:bg-pink-100"
+                    >
+                      Pastel
+                    </button>
+                  </div>
+                </div>
+              </div>
               </div>
 
               <div className="pt-6 border-t border-slate-100 space-y-4">
