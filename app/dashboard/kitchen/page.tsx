@@ -125,10 +125,10 @@ export default function KitchenBoard() {
                       </div>
                     </div>
 
-                    {order.notes && (
+                    { (order as any).notes && (
                       <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-xs font-bold italic shadow-sm">
                         <span className="uppercase text-[10px] block text-amber-600 not-italic mb-1">Nota General del Cliente:</span>
-                        📝 {order.notes}
+                        📝 {(order as any).notes}
                       </div>
                     )}
 

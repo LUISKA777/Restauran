@@ -8,6 +8,7 @@ export interface Order {
   created_at: string;
   is_takeaway: boolean;
   people_count: number;
+  notes?: string;           // ← agrega esta línea
   restaurant_tables?: { table_number: number };
   order_items?: any[];
 }
