@@ -41,7 +41,6 @@ export default function ReportsPage() {
     if (!restaurantId) return;
 
     try {
-      // Calculate date filter
       let dateFilter = '';
       const now = new Date();
       if (range === 'today') {
@@ -58,10 +57,10 @@ export default function ReportsPage() {
         dateFilter = start.toISOString();
       }
 
-      // 1. Fetch Orders
+      // 1. Fetch Orders with their total_price
       let query = supabase
         .from('orders')
-        .select('id, status, created_at, customer_name')
+        .select('id, status, created_at, customer_name, total_price')
         .eq('restaurant_id', restaurantId)
         .neq('status', 'cancelled');
 
@@ -69,37 +68,13 @@ export default function ReportsPage() {
         query = query.gte('created_at', dateFilter);
       }
 
-      // 1. Fetch Orders and calculate real totals from items
       const { data: ordersData, error: ordersError } = await query;
       if (ordersError) throw ordersError;
 
-      const { data: allItems, error: itemsErr } = await supabase
-        .from('order_items')
-        .select('order_id, quantity, products(price)')
-        .eq('order_items.id', 'placeholder'); // We'll fix this by removing the filter and calculating
-
-      // Re-fetching all items to correctly map totals for the filtered orders
-      const { data: finalItems, error: finalErr } = await supabase
-        .from('order_items')
-        .select('order_id, quantity, products(price)');
-
-      if (finalErr) throw finalErr;
-
-      const orderTotalsMap: Record<string, number> = {};
-      finalItems?.forEach(item => {
-        const price = (Array.isArray(item.products) ? item.products[0] : item.products)?.price || 0;
-        orderTotalsMap[item.order_id] = (orderTotalsMap[item.order_id] || 0) + (price * item.quantity);
-      });
-
-      const ordersWithTotals = (ordersData || []).map(order => ({
-        ...order,
-        total_price: orderTotalsMap[order.id] || 0
-      }));
-
-      setOrders(ordersWithTotals);
-
+      setOrders(ordersData || []);
 
       // 2. Fetch Top Product for this range
+      // We fetch items and join with orders to filter by restaurant and date
       const { data: itemsData, error: itemsError } = await supabase
         .from('order_items')
         .select('product_id, products(name), orders(created_at)')
@@ -108,14 +83,14 @@ export default function ReportsPage() {
       if (itemsError) throw itemsError;
 
       const filteredItems = itemsData?.filter(item => {
+        const order = item.orders as any;
         if (!dateFilter) return true;
-        const order = Array.isArray(item.orders) ? item.orders[0] : item.orders;
         return order?.created_at && new Date(order.created_at) >= new Date(dateFilter);
       }) || [];
 
       const counts: Record<string, {name: string, count: number}> = {};
       filteredItems.forEach(item => {
-        const product = Array.isArray(item.products) ? item.products[0] : item.products;
+        const product = item.products as any;
         const name = product?.name || 'Unknown';
         const id = item.product_id;
         if (!counts[id]) counts[id] = { name, count: 0 };

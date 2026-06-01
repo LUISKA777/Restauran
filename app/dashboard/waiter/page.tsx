@@ -55,7 +55,13 @@ export default function WaiterPanel() {
           setNotificationActive(true);
           setTimeout(() => setNotificationActive(false), 5000);
         }
-        // Always refresh immediate orders on any change to orders table
+        fetchImmediateOrders();
+      })
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'order_items'
+      }, () => {
         fetchImmediateOrders();
       })
       .subscribe();

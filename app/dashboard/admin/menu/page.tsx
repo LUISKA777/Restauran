@@ -15,7 +15,8 @@ import {
   Package,
   Image as ImageIcon,
   DollarSign,
-  Tag
+  Tag,
+  Sitemap
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
@@ -28,6 +29,7 @@ interface Product {
   image_url: string;
   is_available: boolean;
   quick_delivery: boolean;
+  sort_order?: number;
 }
 
 export default function AdminMenuPage() {
@@ -48,7 +50,8 @@ export default function AdminMenuPage() {
     category: '',
     image_url: '',
     is_available: true,
-    quick_delivery: false
+    quick_delivery: false,
+    sort_order: '0'
   });
 
   useEffect(() => {
@@ -70,7 +73,7 @@ export default function AdminMenuPage() {
         .from('products')
         .select('*')
         .eq('restaurant_id', restaurantId)
-        .order('name', { ascending: true }),
+        .order('sort_order', { ascending: true }),
       supabase
         .from('restaurants')
         .select('settings')
@@ -101,7 +104,8 @@ export default function AdminMenuPage() {
         category: product.category || 'General',
         image_url: product.image_url || '',
         is_available: product.is_available,
-        quick_delivery: product.quick_delivery || false
+        quick_delivery: product.quick_delivery || false,
+        sort_order: (product.sort_order || 0).toString()
       });
     } else {
       setEditingProduct(null);
@@ -112,7 +116,8 @@ export default function AdminMenuPage() {
         category: categoriesList[0] || 'General',
         image_url: '',
         is_available: true,
-        quick_delivery: false
+        quick_delivery: false,
+        sort_order: '0'
       });
     }
     setIsModalOpen(true);
@@ -143,6 +148,7 @@ export default function AdminMenuPage() {
       image_url: formData.image_url,
       is_available: formData.is_available,
       quick_delivery: formData.quick_delivery,
+      sort_order: parseInt(formData.sort_order) || 0,
       restaurant_id: restaurantId
     };
 
@@ -381,6 +387,20 @@ export default function AdminMenuPage() {
                   className="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-orange-500 transition-all"
                   placeholder="0.00"
                 />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                  <Sitemap size={16} /> Orden en el Menú
+                </label>
+                <input
+                  type="number"
+                  value={formData.sort_order}
+                  onChange={(e) => setFormData({ ...formData, sort_order: e.target.value })}
+                  className="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-orange-500 transition-all"
+                  placeholder="0"
+                />
+                <p className="text-[10px] text-slate-400">Los platos con números menores aparecen primero.</p>
               </div>
 
               <div className="space-y-2">

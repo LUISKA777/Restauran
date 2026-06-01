@@ -54,7 +54,8 @@ export default async function MenuPage({ params }: { params: Promise<{ restauran
   const { data: products, error: productsError } = await supabase
     .from('products')
     .select('*')
-    .eq('restaurant_id', restaurantId);
+    .eq('restaurant_id', restaurantId)
+    .order('sort_order', { ascending: true });
 
   if (productsError) {
     return (
