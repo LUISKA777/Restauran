@@ -216,13 +216,12 @@ export default function WaiterPanel() {
         .eq('table_id', selectedTable)
         .neq('status', 'paid')
         .neq('status', 'cancelled')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
+        .order('created_at', { ascending: false });
 
-      if (!activeError && activeOrder) {
-        orderId = activeOrder.id;
-        const newTotal = (activeOrder.total_price || 0) + total;
+      if (!activeError && activeOrder && activeOrder.length > 0) {
+        const active = activeOrder[0];
+        orderId = active.id;
+        const newTotal = (active.total_price || 0) + total;
 
         const { error: updateError } = await supabase
           .from('orders')
