@@ -98,10 +98,7 @@ export default function MenuClient({
         notes: ''
       }));
 
-      // Fix: Use the correct RPC function name and parameters as per Supabase error hint
-      // The error indicated it couldn't find create_customer_order with p_notes
-      // but suggested the one without it. Let's try a safer approach.
-      const { data, error } = await supabase.rpc('create_order', {
+      let result = await supabase.rpc('create_order', {
         p_restaurant_id: restaurantId,
         p_table_id: selectedTableId,
         p_items: itemsPayload,
@@ -109,9 +106,9 @@ export default function MenuClient({
         p_notes: orderNotes
       });
 
-      if (error) {
+      if (result.error) {
         // Fallback: Try without notes if the function signature is strictly different
-        if (error.message.includes('could not find the function')) {
+        if (result.error.message.includes('could not find the function')) {
            const fallback = await supabase.rpc('create_order', {
             p_restaurant_id: restaurantId,
             p_table_id: selectedTableId,
@@ -119,9 +116,9 @@ export default function MenuClient({
             p_total_price: cartTotal,
           });
           if (fallback.error) throw fallback.error;
-          data = fallback.data;
+          result = fallback;
         } else {
-          throw error;
+          throw result.error;
         }
       }
 
