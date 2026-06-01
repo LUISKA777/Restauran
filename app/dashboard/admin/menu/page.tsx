@@ -16,7 +16,7 @@ import {
   Image as ImageIcon,
   DollarSign,
   Tag,
-  Sitemap
+  LayoutList
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
@@ -391,7 +391,7 @@ export default function AdminMenuPage() {
 
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                  <Sitemap size={16} /> Orden en el Menú
+                  <LayoutList size={16} /> Orden en el Menú
                 </label>
                 <input
                   type="number"
