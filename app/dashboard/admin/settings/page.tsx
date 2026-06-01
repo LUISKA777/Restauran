@@ -58,6 +58,8 @@ export default function BrandSettingsPage() {
         primaryColor: data.settings.primaryColor || '#16a34a',
         secondaryColor: data.settings.secondaryColor || '#ffffff',
         accentColor: data.settings.accentColor || '#f3f4f6',
+        logoUrl: data.settings.logoUrl || '',
+        backgroundImageUrl: data.settings.backgroundImageUrl || '',
         categories: data.settings.categories || ['General']
       });
     }
