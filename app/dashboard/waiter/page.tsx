@@ -24,7 +24,7 @@ export default function WaiterPanel() {
   const [customerName, setCustomerName] = useState('');
   const [peopleCount, setPeopleCount] = useState(1);
   const [isTakeaway, setIsTakeaway] = useState(false);
-  const [cart, setCart] = useState<{ productId: string; quantity: number }[]>([]);
+  const [cart, setCart] = useState<{ productId: string; quantity: number; notes: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [readyOrders, setReadyOrders] = useState<Order[]>([]);
   const [immediateOrders, setImmediateOrders] = useState<Order[]>([]);
@@ -164,8 +164,14 @@ export default function WaiterPanel() {
       if (existing) {
         return prev.map(item => item.productId === productId ? { ...item, quantity: item.quantity + 1 } : item);
       }
-      return [...prev, { productId, quantity: 1 }];
+      return [...prev, { productId, quantity: 1, notes: '' }];
     });
+  };
+
+  const updateItemNotes = (productId: string, notes: string) => {
+    setCart(prev => prev.map(item =>
+      item.productId === productId ? { ...item, notes } : item
+    ));
   };
 
   const removeFromCart = (productId: string) => {
@@ -273,7 +279,8 @@ export default function WaiterPanel() {
     const orderItems = cart.map(item => ({
       order_id: orderId,
       product_id: item.productId,
-      quantity: item.quantity
+      quantity: item.quantity,
+      notes: item.notes
     }));
 
     const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
@@ -529,27 +536,36 @@ export default function WaiterPanel() {
             cart.map(item => {
               const product = products.find(p => p.id === item.productId);
               return (
-                <div key={item.productId} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
-                  <div className="flex-grow">
-                    <p className="text-sm font-medium text-gray-800">{product?.name}</p>
-                    <p className="text-xs text-gray-500">₡{product?.price}</p>
+                <div key={item.productId} className="flex flex-col p-3 bg-gray-50 rounded-xl border border-gray-100 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-grow">
+                      <p className="text-sm font-medium text-gray-800">{product?.name}</p>
+                      <p className="text-xs text-gray-500">₡{product?.price}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => removeFromCart(item.productId)}
+                        className="p-1 text-gray-500 hover:text-red-600"
+                        title="Eliminar producto"
+                      >
+                        <X size={14} />
+                      </button>
+                      <span className="text-sm font-bold w-6 text-center">{item.quantity}</span>
+                      <button
+                        onClick={() => updateQuantity(item.productId, 1)}
+                        className="p-1 text-gray-500 hover:text-green-600"
+                      >
+                        <Plus size={14} />
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => removeFromCart(item.productId)}
-                      className="p-1 text-gray-500 hover:text-red-600"
-                      title="Eliminar producto"
-                    >
-                      <X size={14} />
-                    </button>
-                    <span className="text-sm font-bold w-6 text-center">{item.quantity}</span>
-                    <button
-                      onClick={() => updateQuantity(item.productId, 1)}
-                      className="p-1 text-gray-500 hover:text-green-600"
-                    >
-                      <Plus size={14} />
-                    </button>
-                  </div>
+                  <input
+                    type="text"
+                    value={item.notes}
+                    onChange={(e) => updateItemNotes(item.productId, e.target.value)}
+                    placeholder="Notas (ej: Sin cebolla, término medio...)"
+                    className="w-full px-3 py-1.5 text-xs border rounded-lg outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                  />
                 </div>
               );
             })

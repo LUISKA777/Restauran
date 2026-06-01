@@ -1,4 +1,20 @@
-export type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered';
+export type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'paid' | 'cancelled';
+
+export interface OrderItem {
+  id: string;
+  order_id: string;
+  product_id: string;
+  quantity: number;
+  notes?: string;
+  delivered: boolean;
+  products?: {
+    id: string;
+    name: string;
+    price: number;
+    description: string;
+    image_url: string;
+  };
+}
 
 export interface Order {
   id: string;
@@ -8,7 +24,8 @@ export interface Order {
   created_at: string;
   is_takeaway: boolean;
   people_count: number;
-  notes?: string;           // ← agrega esta línea
+  notes?: string;
+  total_price: number;
   restaurant_tables?: { table_number: number };
-  order_items?: any[];
+  order_items?: OrderItem[];
 }
