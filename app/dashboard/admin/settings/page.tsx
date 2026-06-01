@@ -56,13 +56,14 @@ export default function BrandSettingsPage() {
       console.error('Error fetching settings:', error);
     } else if (data?.settings) {
       setSettings({
-        primaryColor: data.settings.primaryColor || '#16a34a',
-        secondaryColor: data.settings.secondaryColor || '#ffffff',
-        accentColor: data.settings.accentColor || '#f3f4f6',
-        logoUrl: data.settings.logoUrl || '',
-        backgroundImageUrl: data.settings.backgroundImageUrl || '',
-        backgroundColor: data.settings.backgroundColor || '#f8fafc',
-        categories: data.settings.categories || ['General']
+        primaryColor: '#16a34a',
+        secondaryColor: '#ffffff',
+        accentColor: '#f3f4f6',
+        logoUrl: '',
+        backgroundImageUrl: '',
+        backgroundColor: '#f8fafc',
+        categories: ['General'],
+        ...data.settings
       });
     }
     setLoading(false);

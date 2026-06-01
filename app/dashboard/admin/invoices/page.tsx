@@ -250,7 +250,7 @@ export default function InvoicesPage() {
                     <div className={`p-3 rounded-xl border ${calculateChange() >= 0 ? 'bg-green-50 border-green-100 text-green-700' : 'bg-red-50 border-red-100 text-red-700'}`}>
                       <div className="flex justify-between items-center font-bold">
                         <span>Vuelto:</span>
-                        <span>₡{calculateChange().toFixed(0)}</span>
+                        <span>₡${Math.floor(calculateChange()).toFixed(0)}</span>
                       </div>
                     </div>
                   )}

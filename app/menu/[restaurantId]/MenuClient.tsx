@@ -95,42 +95,28 @@ export default function MenuClient({
       const itemsPayload = cart.map(item => ({
         product_id: item.product.id,
         quantity: item.quantity,
-        notes: ''
+        notes: orderNotes || ''
       }));
 
-      // The server explicitly told us: "Perhaps you meant to call the function public.create_customer_order"
-      // Let's use that and handle the parameters carefully.
-      let result = await supabase.rpc('create_customer_order', {
+      const { data, error } = await supabase.rpc('create_customer_order', {
         p_restaurant_id: restaurantId,
         p_table_id: selectedTableId,
         p_items: itemsPayload,
         p_total_price: cartTotal,
-        p_notes: orderNotes
       });
 
-      if (result.error) {
-        // If it still fails with p_notes, try the version without notes as suggested by the hint in the previous error
-        if (result.error.message.includes('could not find the function') || result.error.code === 'PGRST202') {
-           const fallback = await supabase.rpc('create_customer_order', {
-            p_restaurant_id: restaurantId,
-            p_table_id: selectedTableId,
-            p_items: itemsPayload,
-            p_total_price: cartTotal,
-          });
-          if (fallback.error) throw fallback.error;
-          result = fallback;
-        } else {
-          throw result.error;
-        }
+      if (error || !data) {
+        console.error('Supabase RPC Error:', error);
+        throw new Error(error?.message || 'No se pudo procesar el pedido en el servidor');
       }
 
       setShowSuccess(true);
       setCart([]);
       setOrderNotes('');
       setIsCartOpen(false);
-    } catch (err) {
-      console.error('Error creating order:', err);
-      alert('Hubo un error al enviar el pedido. Por favor, intenta de de nuevo.');
+    } catch (err: any) {
+      console.error('Order Submission Exception:', err);
+      alert(`Error al enviar el pedido: ${err.message || 'Hubo un problema técnico. Por favor, contacta al mesero.'}`);
     } finally {
       setIsSubmitting(false);
     }
