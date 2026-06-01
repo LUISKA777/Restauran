@@ -156,14 +156,16 @@ export default function AdminDashboard() {
 
         <nav className="flex-grow space-y-2">
           {quickLinks.map(link => (
-            <button
-              key={link.path}
-              onClick={() => router.push(link.path)}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 transition-colors text-slate-300 hover:text-white group"
-            >
-              <span className="group-hover:scale-110 transition-transform">{link.icon}</span>
-              <span className="font-medium">{link.name}</span>
-            </button>
+            link && (
+              <button
+                key={link.path}
+                onClick={() => router.push(link.path)}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 transition-colors text-slate-300 hover:text-white group"
+              >
+                <span className="group-hover:scale-110 transition-transform">{link.icon}</span>
+                <span className="font-medium">{link.name}</span>
+              </button>
+            )
           ))}
         </nav>
 
@@ -228,20 +230,22 @@ export default function AdminDashboard() {
         <h2 className="text-xl font-bold text-slate-800 mt-12 mb-6">Accesos Rápidos</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {quickLinks.map(link => (
-            <div
-              key={link.path}
-              onClick={() => router.push(link.path)}
-              className="p-6 bg-white rounded-2xl border border-slate-200 hover:border-orange-500 hover:shadow-lg transition-all cursor-pointer group"
-            >
-              <div className={`w-12 h-12 ${link.color} rounded-xl flex items-center justify-center text-white mb-4 group-hover:scale-110 transition-transform`}>
-                {link.icon}
+            link && (
+              <div
+                key={link.path}
+                onClick={() => router.push(link.path)}
+                className="p-6 bg-white rounded-2xl border border-slate-200 hover:border-orange-500 hover:shadow-lg transition-all cursor-pointer group"
+              >
+                <div className={`w-12 h-12 ${link.color} rounded-xl flex items-center justify-center text-white mb-4 group-hover:scale-110 transition-transform`}>
+                  {link.icon}
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 mb-2">{link.name}</h3>
+                <p className="text-sm text-slate-500 mb-4">{link.description}</p>
+                <div className="text-orange-600 text-sm font-semibold flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                  Abrir sección
+                </div>
               </div>
-              <h3 className="text-lg font-bold text-slate-900 mb-2">{link.name}</h3>
-              <p className="text-sm text-slate-500 mb-4">{link.description}</p>
-              <div className="text-orange-600 text-sm font-semibold flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                Abrir sección
-              </div>
-            </div>
+            )
           ))}
         </div>
       </main>
