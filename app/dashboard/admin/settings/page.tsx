@@ -306,7 +306,6 @@ export default function BrandSettingsPage() {
                   </div>
                 </div>
               </div>
-              </div>
 
               <div className="pt-6 border-t border-slate-100 space-y-4">
                 <p className="text-sm font-bold text-slate-500 flex items-center gap-2">
