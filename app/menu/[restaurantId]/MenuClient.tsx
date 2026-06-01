@@ -98,7 +98,9 @@ export default function MenuClient({
         notes: ''
       }));
 
-      let result = await supabase.rpc('create_order', {
+      // The server explicitly told us: "Perhaps you meant to call the function public.create_customer_order"
+      // Let's use that and handle the parameters carefully.
+      let result = await supabase.rpc('create_customer_order', {
         p_restaurant_id: restaurantId,
         p_table_id: selectedTableId,
         p_items: itemsPayload,
@@ -107,9 +109,9 @@ export default function MenuClient({
       });
 
       if (result.error) {
-        // Fallback: Try without notes if the function signature is strictly different
-        if (result.error.message.includes('could not find the function')) {
-           const fallback = await supabase.rpc('create_order', {
+        // If it still fails with p_notes, try the version without notes as suggested by the hint in the previous error
+        if (result.error.message.includes('could not find the function') || result.error.code === 'PGRST202') {
+           const fallback = await supabase.rpc('create_customer_order', {
             p_restaurant_id: restaurantId,
             p_table_id: selectedTableId,
             p_items: itemsPayload,
@@ -128,7 +130,7 @@ export default function MenuClient({
       setIsCartOpen(false);
     } catch (err) {
       console.error('Error creating order:', err);
-      alert('Hubo un error al enviar el pedido. Por favor, intenta de nuevo.');
+      alert('Hubo un error al enviar el pedido. Por favor, intenta de de nuevo.');
     } finally {
       setIsSubmitting(false);
     }
