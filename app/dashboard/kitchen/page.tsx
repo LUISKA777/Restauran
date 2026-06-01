@@ -125,6 +125,13 @@ export default function KitchenBoard() {
                       </div>
                     </div>
 
+                    {order.notes && (
+                      <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-xs font-bold italic shadow-sm">
+                        <span className="uppercase text-[10px] block text-amber-600 not-italic mb-1">Nota General del Cliente:</span>
+                        📝 {order.notes}
+                      </div>
+                    )}
+
                     <div className="space-y-2">
                       <p className="text-xs font-semibold text-slate-400 uppercase tracking-tight">Platillos</p>
                       <div className="space-y-2">
@@ -144,7 +151,7 @@ export default function KitchenBoard() {
                               )}
                             </div>
                             {item.notes && (
-                              <div className="mt-1 px-2 py-1 bg-amber-50 text-amber-700 text-[11px] font-bold rounded-md border border-amber-100 italic">
+                              <div className="mt-1 px-2 py-1 bg-slate-100 text-slate-600 text-[11px] font-medium rounded-md border border-slate-200 italic">
                                 📝 {item.notes}
                               </div>
                             )}

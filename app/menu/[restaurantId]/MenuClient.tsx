@@ -92,10 +92,11 @@ export default function MenuClient({
 
     setIsSubmitting(true);
     try {
+      // Each item now has empty notes because we use the general order note
       const itemsPayload = cart.map(item => ({
         product_id: item.product.id,
         quantity: item.quantity,
-        notes: orderNotes || ''
+        notes: ''
       }));
 
       const { data, error } = await supabase.rpc('create_customer_order', {
@@ -103,12 +104,10 @@ export default function MenuClient({
         p_table_id: selectedTableId,
         p_items: itemsPayload,
         p_total_price: cartTotal,
+        p_notes: orderNotes // This now goes to the general order notes column
       });
 
-      if (error || !data) {
-        console.error('Supabase RPC Error:', error);
-        throw new Error(error?.message || 'No se pudo procesar el pedido en el servidor');
-      }
+      if (error) throw error;
 
       setShowSuccess(true);
       setCart([]);
@@ -116,7 +115,7 @@ export default function MenuClient({
       setIsCartOpen(false);
     } catch (err: any) {
       console.error('Order Submission Exception:', err);
-      alert(`Error al enviar el pedido: ${err.message || 'Hubo un problema técnico. Por favor, contacta al mesero.'}`);
+      alert(`Error al enviar el pedido: ${err.message || 'Hubo un problema técnico.'}`);
     } finally {
       setIsSubmitting(false);
     }
