@@ -19,7 +19,7 @@ export function ProductCard({ product, onAdd }: ProductCardProps) {
   const isUnavailable = product.is_available === false;
 
   return (
-    <div className={`bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden flex flex-col transition-all hover:shadow-md ${isUnavailable ? 'opacity-60 grayscale-[0.5] cursor-not-allowed' : 'hover:border-[var(--color-primary)] group active:scale-[0.98]'}`}>
+    <div className={`bg-white/70 backdrop-blur-md rounded-3xl border border-white/50 shadow-sm overflow-hidden flex flex-col transition-all hover:shadow-xl ${isUnavailable ? 'opacity-60 grayscale-[0.5] cursor-not-allowed' : 'hover:border-[var(--color-primary)] group active:scale-[0.98]'}`}>
       <div className="relative aspect-[4/3] overflow-hidden">
         {product.image_url ? (
           <img
@@ -28,7 +28,7 @@ export function ProductCard({ product, onAdd }: ProductCardProps) {
             className={`w-full h-full object-cover transition-transform duration-500 ${!isUnavailable && 'group-hover:scale-110'}`}
           />
         ) : (
-          <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400">
+          <div className="w-full h-full bg-slate-100/50 flex items-center justify-center text-slate-400">
             <span className="text-xs font-medium uppercase tracking-wider">Sin imagen</span>
           </div>
         )}

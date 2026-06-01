@@ -119,26 +119,43 @@ export default function MenuClient({
 
   return (
     <div
-      className="min-h-screen bg-slate-50 flex flex-col relative overflow-hidden"
+      className="min-h-screen flex flex-col relative overflow-hidden"
       style={{
         '--color-primary': brandColors.primary,
         '--color-secondary': brandColors.secondary,
         '--color-accent': brandColors.accent,
       } as React.CSSProperties}
     >
-      {/* Blurred Background Effect */}
-      {(settings?.backgroundImageUrl || settings?.logoUrl) && (
+      {/* Enhanced Atmospheric Background */}
+      <div className="fixed inset-0 z-[-1] pointer-events-none overflow-hidden">
+        {/* Base color gradient to prevent pure white */}
         <div
-          className="fixed inset-0 z-[-1] opacity-20 pointer-events-none"
-          style={{
-            backgroundImage: `url(${settings.backgroundImageUrl || settings.logoUrl})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            filter: 'blur(60px) saturate(150%)',
-            transform: 'scale(1.1)'
-          }}
+          className="absolute inset-0 opacity-30"
+          style={{ background: `radial-gradient(circle at top right, ${brandColors.primary}22, transparent), radial-gradient(circle at bottom left, ${brandColors.accent}44, transparent)` }}
         />
-      )}
+
+        {/* Blurred Image Layer */}
+        {(settings?.backgroundImageUrl || settings?.logoUrl) ? (
+          <div
+            className="absolute inset-0 opacity-40 scale-110"
+            style={{
+              backgroundImage: `url(${settings.backgroundImageUrl || settings.logoUrl})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              filter: 'blur(80px) saturate(180%)',
+            }}
+          />
+        ) : (
+          <div
+            className="absolute inset-0 opacity-20"
+            style={{ backgroundColor: brandColors.primary, filter: 'blur(100px)' }}
+          />
+        )}
+
+        {/* Subtle Overlay for Readability */}
+        <div className="absolute inset-0 bg-white/60 backdrop-blur-sm" />
+      </div>
+
       <BrandingHeader name={restaurantName} settings={settings} />
 
       {!selectedTableId ? (
