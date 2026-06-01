@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Clock, CheckCircle, Flame, Package, Truck, RotateCcw, Users, UtensilsCrossed } from 'lucide-react';
+import { Clock, CheckCircle, Flame, Package, Truck, RotateCcw, Users, UtensilsCrossed, XCircle, Banknote } from 'lucide-react';
 import { Order, OrderStatus } from '@/types/order';
 
 const STATUS_COLORS: Record<OrderStatus, { bg: string; text: string; icon: any }> = {
@@ -10,6 +10,8 @@ const STATUS_COLORS: Record<OrderStatus, { bg: string; text: string; icon: any }
   preparing: { bg: 'bg-yellow-100', text: 'text-yellow-600', icon: Flame },
   ready: { bg: 'bg-green-100', text: 'text-green-600', icon: Package },
   delivered: { bg: 'bg-slate-100', text: 'text-slate-400', icon: Truck },
+  paid: { bg: 'bg-green-200', text: 'text-green-700', icon: Banknote },
+  cancelled: { bg: 'bg-red-100', text: 'text-red-600', icon: XCircle },
 };
 
 export default function KitchenBoard() {
