@@ -66,8 +66,16 @@ export default function WaiterPanel() {
       })
       .subscribe();
 
+    // Polling fallback: Refresh immediate orders every 30 seconds
+    // in case Realtime is not enabled in Supabase Dashboard
+    const pollingInterval = setInterval(() => {
+      fetchImmediateOrders();
+      fetchReadyOrders();
+    }, 30000);
+
     return () => {
       supabase.removeChannel(channel);
+      clearInterval(pollingInterval);
     };
   }, []);
 
