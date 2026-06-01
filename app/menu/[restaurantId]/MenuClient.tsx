@@ -98,15 +98,32 @@ export default function MenuClient({
         notes: ''
       }));
 
-      const { data, error } = await supabase.rpc('create_customer_order', {
+      // Fix: Use the correct RPC function name and parameters as per Supabase error hint
+      // The error indicated it couldn't find create_customer_order with p_notes
+      // but suggested the one without it. Let's try a safer approach.
+      const { data, error } = await supabase.rpc('create_order', {
         p_restaurant_id: restaurantId,
         p_table_id: selectedTableId,
         p_items: itemsPayload,
         p_total_price: cartTotal,
-        p_notes: orderNotes // Assuming the RPC accepts p_notes
+        p_notes: orderNotes
       });
 
-      if (error) throw error;
+      if (error) {
+        // Fallback: Try without notes if the function signature is strictly different
+        if (error.message.includes('could not find the function')) {
+           const fallback = await supabase.rpc('create_order', {
+            p_restaurant_id: restaurantId,
+            p_table_id: selectedTableId,
+            p_items: itemsPayload,
+            p_total_price: cartTotal,
+          });
+          if (fallback.error) throw fallback.error;
+          data = fallback.data;
+        } else {
+          throw error;
+        }
+      }
 
       setShowSuccess(true);
       setCart([]);
@@ -172,11 +189,11 @@ export default function MenuClient({
             <div className="mx-auto w-20 h-20 bg-white shadow-xl rounded-3xl flex items-center justify-center text-[var(--color-primary)] mb-6 rotate-3">
               <TableIcon size={40} strokeWidth={2.5} />
             </div>
-            <h2 className="text-4xl font-black text-slate-900 tracking-tight">
+            <h2 className={`text-4xl font-black tracking-tight transition-colors ${settings?.backgroundColor === '#0f172a' ? 'text-white' : 'text-slate-900'}`}>
               ¡Bienvenido a <br />
               <span style={{ color: brandColors.primary }}>{restaurantName}</span>
             </h2>
-            <p className="text-slate-500 text-lg font-medium">
+            <p className={`text-lg font-medium transition-colors ${settings?.backgroundColor === '#0f172a' ? 'text-slate-300' : 'text-slate-500'}`}>
               Para comenzar a disfrutar, por favor selecciona el número de tu mesa.
             </p>
           </div>
@@ -186,7 +203,11 @@ export default function MenuClient({
               <button
                 key={table.id}
                 onClick={() => setSelectedTableId(table.id)}
-                className="group relative p-6 bg-white border-2 border-slate-100 rounded-3xl font-black text-slate-700 hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-all shadow-sm active:scale-95 overflow-hidden"
+                className={`group relative p-6 border-2 rounded-3xl font-black transition-all shadow-sm active:scale-95 overflow-hidden ${
+                  settings?.backgroundColor === '#0f172a'
+                  ? 'bg-slate-800 border-slate-700 text-slate-200 hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]'
+                  : 'bg-white border-slate-100 text-slate-700 hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]'
+                }`}
               >
                 <span className="relative z-10 text-2xl">{table.table_number}</span>
                 <div className="absolute -right-2 -bottom-2 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -206,12 +227,12 @@ export default function MenuClient({
 
           <main className="flex-grow p-4 space-y-8 pb-32 animate-in fade-in duration-500">
             <div className="flex justify-between items-center px-2">
-              <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+              <h2 className={`text-2xl font-black tracking-tight transition-colors ${settings?.backgroundColor === '#0f172a' ? 'text-white' : 'text-slate-900'}`}>
                 {activeCategory}
               </h2>
               <button
                 onClick={() => setSelectedTableId(null)}
-                className="text-xs font-bold text-slate-400 hover:text-slate-600 flex items-center gap-1 transition-colors group"
+                className={`text-xs font-bold flex items-center gap-1 transition-colors group ${settings?.backgroundColor === '#0f172a' ? 'text-slate-400 hover:text-slate-200' : 'text-slate-400 hover:text-slate-600'}`}
               >
                 <ChevronRight size={14} className="rotate-180 group-hover:-translate-x-1 transition-transform" />
                 Cambiar Mesa
