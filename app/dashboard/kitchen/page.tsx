@@ -46,6 +46,8 @@ export default function KitchenBoard() {
       .select(`*, restaurant_tables(table_number), order_items(product_id, products(name, description, quick_delivery), quantity)`)
       .eq('restaurant_id', restaurantId)
       .neq('status', 'delivered')
+      .neq('status', 'paid')
+      .neq('status', 'cancelled')
       .order('created_at', { ascending: true });
 
     if (error) console.error('Error fetching orders:', error);
@@ -88,7 +90,7 @@ export default function KitchenBoard() {
             </div>
           ) : (
             orders.map((order) => {
-              const statusCfg = STATUS_COLORS[order.status];
+              const statusCfg = STATUS_COLORS[order.status] || { bg: 'bg-gray-100', text: 'text-gray-600', icon: Clock };
               const Icon = statusCfg.icon;
 
               return (
