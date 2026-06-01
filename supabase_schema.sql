@@ -64,6 +64,7 @@ CREATE TABLE order_items (
     product_id UUID REFERENCES products(id) ON DELETE CASCADE,
     quantity INTEGER NOT NULL DEFAULT 1,
     notes TEXT,
+    delivered BOOLEAN DEFAULT false,
     created_at TIMESTAMPTZ DEFAULT now()
 );
 

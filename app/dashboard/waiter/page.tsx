@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import { Plus, ShoppingBag, User, Users, Table, Send, RotateCcw, X, Package, Bell, CheckCircle2 } from 'lucide-react';
+import { Plus, ShoppingBag, User, Users, Table, Send, RotateCcw, X, Package, Bell, CheckCircle2, Receipt } from 'lucide-react';
 import { Order } from '@/types/order';
 
 interface Product {
@@ -105,7 +105,7 @@ export default function WaiterPanel() {
 
     const { data, error } = await supabase
       .from('orders')
-      .select(`*, restaurant_tables(table_number), order_items(product_id, products(name, description, quick_delivery), quantity)`)
+      .select(`*, restaurant_tables(table_number), order_items(id, product_id, products(name, description, quick_delivery), quantity, delivered)`)
       .eq('restaurant_id', restaurantId)
       .eq('status', 'confirmed')
       .order('created_at', { ascending: true });
@@ -113,26 +113,48 @@ export default function WaiterPanel() {
     if (error) console.error('Error fetching immediate orders:', error);
     else if (data) {
       const filtered = data.filter(order =>
-        order.order_items?.some((item: any) => item.products?.quick_delivery)
+        order.order_items?.some((item: any) => item.products?.quick_delivery && !item.delivered)
       );
       setImmediateOrders(filtered);
     }
   }
 
-  async function markAsDelivered(orderId: string) {
-    const { error } = await supabase
-      .from('orders')
-      .update({
-        status: 'delivered',
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', orderId);
+  async function markAsDelivered(orderId: string, isImmediate = false) {
+    if (isImmediate) {
+      // Only mark quick delivery items as delivered
+      const { data: order } = await supabase
+        .from('orders')
+        .select('order_items(id, products(quick_delivery))')
+        .eq('id', orderId)
+        .single();
 
-    if (error) {
-      alert('Error al marcar como entregado');
+      const itemsToMark = order?.order_items
+        ?.filter((item: any) => item.products?.quick_delivery)
+        .map((item: any) => item.id);
+
+      if (itemsToMark && itemsToMark.length > 0) {
+        const { error } = await supabase
+          .from('order_items')
+          .update({ delivered: true })
+          .in('id', itemsToMark);
+
+        if (error) alert('Error al marcar productos rápidos como entregados');
+      }
     } else {
-      fetchReadyOrders();
+      // Mark entire order as delivered
+      const { error } = await supabase
+        .from('orders')
+        .update({
+          status: 'delivered',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', orderId);
+
+      if (error) alert('Error al marcar como entregado');
     }
+
+    fetchReadyOrders();
+    fetchImmediateOrders();
   }
 
   const addToCart = (productId: string) => {
@@ -165,6 +187,11 @@ export default function WaiterPanel() {
     const restaurantId = localStorage.getItem('restaurant_id');
     if (!restaurantId) return;
 
+    const total = cart.reduce((acc, item) => {
+      const p = products.find(prod => prod.id === item.productId);
+      return acc + (p?.price || 0) * item.quantity;
+    }, 0);
+
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .insert({
@@ -172,7 +199,7 @@ export default function WaiterPanel() {
         table_id: isTakeaway ? null : selectedTable,
         customer_name: customerName,
         status: 'confirmed',
-        total_price: 0,
+        total_price: total,
         is_takeaway: isTakeaway,
         people_count: peopleCount
       })
@@ -223,6 +250,12 @@ export default function WaiterPanel() {
           >
             <RotateCcw size={16} /> Cambiar Rol
           </button>
+          <button
+            onClick={() => router.push('/dashboard/admin/invoices')}
+            className="px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-bold hover:bg-orange-600 flex items-center gap-2 transition-colors shadow-sm"
+          >
+            <Receipt size={16} /> Facturas y Cobros
+          </button>
         </header>
 
         {/* NOTIFICATION BANNER */}
@@ -262,7 +295,7 @@ export default function WaiterPanel() {
                   </div>
 
                   <div className="space-y-1 bg-orange-50 p-2 rounded-lg">
-                    {order.order_items?.filter((item: any) => item.products?.quick_delivery).map((item: any, idx: number) => (
+                    {order.order_items?.filter((item: any) => item.products?.quick_delivery && !item.delivered).map((item: any, idx: number) => (
                       <div key={idx} className="text-xs flex justify-between text-gray-600">
                         <span className="font-bold text-orange-700">{item.quantity}x {item.products?.name}</span>
                       </div>
@@ -270,10 +303,10 @@ export default function WaiterPanel() {
                   </div>
 
                   <button
-                    onClick={() => markAsDelivered(order.id)}
+                    onClick={() => markAsDelivered(order.id, true)}
                     className="w-full py-2 bg-orange-600 text-white text-sm font-bold rounded-xl hover:bg-orange-700 transition-colors flex items-center justify-center gap-2"
                   >
-                    <CheckCircle2 size={16} /> Marcar como Entregado
+                    <CheckCircle2 size={16} /> Entregar Rápidos
                   </button>
                 </div>
               ))

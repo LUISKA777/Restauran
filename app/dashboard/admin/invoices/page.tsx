@@ -95,7 +95,8 @@ export default function InvoicesPage() {
   const calculateChange = () => {
     if (!selectedOrder) return 0;
     const received = parseFloat(cashReceived) || 0;
-    return received - selectedOrder.total_price;
+    const total = parseFloat(selectedOrder.total_price.toString()) || 0;
+    return received - total;
   };
 
   if (loading) return <div className="min-h-screen flex items-center justify-center">Cargando facturas...</div>;
