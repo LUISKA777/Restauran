@@ -17,7 +17,7 @@ export default function KitchenBoard() {
   const [loading, setLoading] = useState(true);
 
   const playBell = () => {
-    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2876/2876-preview.mp3');
+    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3');
     audio.play().catch(e => console.log('Audio playback failed', e));
   };
 

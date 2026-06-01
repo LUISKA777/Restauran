@@ -32,7 +32,7 @@ export default function WaiterPanel() {
   const router = useRouter();
 
   const playBell = () => {
-    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2876/2876-preview.mp3');
+    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/1015/1015-preview.mp3');
     audio.play().catch(e => console.log('Audio playback failed', e));
   };
 
@@ -41,20 +41,21 @@ export default function WaiterPanel() {
     fetchReadyOrders();
     fetchImmediateOrders();
 
-    // Real-time subscription for ready orders
+    // Real-time subscription for ready orders and immediate delivery
     const channel = supabase
       .channel('waiter_notifications')
       .on('postgres_changes', {
-        event: 'UPDATE',
+        event: '*',
         schema: 'public',
         table: 'orders'
       }, (payload) => {
-        if (payload.new?.status === 'ready') {
+        if (payload.eventType === 'UPDATE' && payload.new?.status === 'ready') {
           playBell();
           fetchReadyOrders();
           setNotificationActive(true);
           setTimeout(() => setNotificationActive(false), 5000);
         }
+        // Always refresh immediate orders on any change to orders table
         fetchImmediateOrders();
       })
       .subscribe();
@@ -192,27 +193,85 @@ export default function WaiterPanel() {
       return acc + (p?.price || 0) * item.quantity;
     }, 0);
 
-    const { data: order, error: orderError } = await supabase
-      .from('orders')
-      .insert({
-        restaurant_id: restaurantId,
-        table_id: isTakeaway ? null : selectedTable,
-        customer_name: customerName,
-        status: 'confirmed',
-        total_price: total,
-        is_takeaway: isTakeaway,
-        people_count: peopleCount
-      })
-      .select()
-      .single();
+    let orderId: string;
 
-    if (orderError) {
-      alert('Error al crear el pedido');
-      return;
+    if (!isTakeaway && selectedTable) {
+      // Check if there's an active order for this table
+      const { data: activeOrder, error: activeError } = await supabase
+        .from('orders')
+        .select('id, total_price')
+        .eq('restaurant_id', restaurantId)
+        .eq('table_id', selectedTable)
+        .neq('status', 'paid')
+        .neq('status', 'cancelled')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (!activeError && activeOrder) {
+        orderId = activeOrder.id;
+        const newTotal = (activeOrder.total_price || 0) + total;
+
+        const { error: updateError } = await supabase
+          .from('orders')
+          .update({
+            total_price: newTotal,
+            status: 'confirmed', // Reset to confirmed if it was delivered/ready
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', orderId);
+
+        if (updateError) {
+          alert('Error al actualizar el pedido existente');
+          return;
+        }
+      } else {
+        // No active order, create new one
+        const { data: newOrder, error: newOrderError } = await supabase
+          .from('orders')
+          .insert({
+            restaurant_id: restaurantId,
+            table_id: selectedTable,
+            customer_name: customerName,
+            status: 'confirmed',
+            total_price: total,
+            is_takeaway: false,
+            people_count: peopleCount
+          })
+          .select()
+          .single();
+
+        if (newOrderError) {
+          alert('Error al crear el pedido');
+          return;
+        }
+        orderId = newOrder.id;
+      }
+    } else {
+      // Takeaway always creates a new order
+      const { data: newOrder, error: newOrderError } = await supabase
+        .from('orders')
+        .insert({
+          restaurant_id: restaurantId,
+          table_id: null,
+          customer_name: customerName,
+          status: 'confirmed',
+          total_price: total,
+          is_takeaway: true,
+          people_count: peopleCount
+        })
+        .select()
+        .single();
+
+      if (newOrderError) {
+        alert('Error al crear el pedido');
+        return;
+      }
+      orderId = newOrder.id;
     }
 
     const orderItems = cart.map(item => ({
-      order_id: order.id,
+      order_id: orderId,
       product_id: item.productId,
       quantity: item.quantity
     }));

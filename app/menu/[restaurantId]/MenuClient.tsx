@@ -119,13 +119,26 @@ export default function MenuClient({
 
   return (
     <div
-      className="min-h-screen bg-slate-50 flex flex-col"
+      className="min-h-screen bg-slate-50 flex flex-col relative overflow-hidden"
       style={{
         '--color-primary': brandColors.primary,
         '--color-secondary': brandColors.secondary,
         '--color-accent': brandColors.accent,
       } as React.CSSProperties}
     >
+      {/* Blurred Background Effect */}
+      {(settings?.backgroundImageUrl || settings?.logoUrl) && (
+        <div
+          className="fixed inset-0 z-[-1] opacity-20 pointer-events-none"
+          style={{
+            backgroundImage: `url(${settings.backgroundImageUrl || settings.logoUrl})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            filter: 'blur(60px) saturate(150%)',
+            transform: 'scale(1.1)'
+          }}
+        />
+      )}
       <BrandingHeader name={restaurantName} settings={settings} />
 
       {!selectedTableId ? (

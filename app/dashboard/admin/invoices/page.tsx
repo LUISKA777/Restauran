@@ -94,8 +94,8 @@ export default function InvoicesPage() {
 
   const calculateChange = () => {
     if (!selectedOrder) return 0;
-    const received = parseFloat(cashReceived) || 0;
-    const total = parseFloat(selectedOrder.total_price.toString()) || 0;
+    const received = Math.round((parseFloat(cashReceived) || 0) * 100) / 100;
+    const total = Math.round((parseFloat(selectedOrder.total_price.toString()) || 0) * 100) / 100;
     return received - total;
   };
 
@@ -230,13 +230,21 @@ export default function InvoicesPage() {
                 <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
                   <div className="space-y-2">
                     <label className="text-sm font-bold text-slate-700">Monto Recibido (₡)</label>
-                    <input
-                      type="number"
-                      value={cashReceived}
-                      onChange={(e) => setCashReceived(e.target.value)}
-                      className="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-orange-500 text-lg font-bold"
-                      placeholder="0.00"
-                    />
+                    <div className="flex gap-2">
+                      <input
+                        type="number"
+                        value={cashReceived}
+                        onChange={(e) => setCashReceived(e.target.value)}
+                        className="flex-grow px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-orange-500 text-lg font-bold"
+                        placeholder="0.00"
+                      />
+                      <button
+                        onClick={() => setCashReceived(selectedOrder.total_price.toString())}
+                        className="px-3 py-2 bg-slate-100 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-200 transition-colors"
+                      >
+                        Cobrar Exacto
+                      </button>
+                    </div>
                   </div>
                   {cashReceived && (
                     <div className={`p-3 rounded-xl border ${calculateChange() >= 0 ? 'bg-green-50 border-green-100 text-green-700' : 'bg-red-50 border-red-100 text-red-700'}`}>

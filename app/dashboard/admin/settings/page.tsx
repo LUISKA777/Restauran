@@ -31,6 +31,8 @@ export default function BrandSettingsPage() {
     primaryColor: '#16a34a',
     secondaryColor: '#ffffff',
     accentColor: '#f3f4f6',
+    logoUrl: '',
+    backgroundImageUrl: '',
     categories: ['General', 'Bebidas', 'Platos Fuertes']
   });
 
@@ -216,6 +218,43 @@ export default function BrandSettingsPage() {
                       onChange={(e) => setSettings({ ...settings, accentColor: e.target.value })}
                       className="flex-grow px-3 py-2 border rounded-xl text-sm font-mono"
                     />
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6">
+                <div className="space-y-3">
+                  <label className="text-sm font-bold text-slate-600 flex items-center gap-2">
+                    URL del Logo
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={settings.logoUrl}
+                      onChange={(e) => setSettings({ ...settings, logoUrl: e.target.value })}
+                      className="flex-grow px-3 py-2 border rounded-xl text-sm"
+                      placeholder="https://example.com/logo.png"
+                    />
+                    <div className="w-10 h-10 border rounded-lg overflow-hidden bg-slate-100 flex items-center justify-center">
+                      {settings.logoUrl ? <img src={settings.logoUrl} alt="Logo" className="w-full h-full object-cover" /> : <span className="text-xs text-slate-400">?</span>}
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <label className="text-sm font-bold text-slate-600 flex items-center gap-2">
+                    Imagen de Fondo
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={settings.backgroundImageUrl}
+                      onChange={(e) => setSettings({ ...settings, backgroundImageUrl: e.target.value })}
+                      className="flex-grow px-3 py-2 border rounded-xl text-sm"
+                      placeholder="https://example.com/bg.jpg"
+                    />
+                    <div className="w-10 h-10 border rounded-lg overflow-hidden bg-slate-100 flex items-center justify-center">
+                      {settings.backgroundImageUrl ? <img src={settings.backgroundImageUrl} alt="BG" className="w-full h-full object-cover" /> : <span className="text-xs text-slate-400">?</span>}
+                    </div>
                   </div>
                 </div>
               </div>
