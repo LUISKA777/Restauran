@@ -16,12 +16,18 @@ export default function KitchenBoard() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const playBell = () => {
+    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2876/2876-preview.mp3');
+    audio.play().catch(e => console.log('Audio playback failed', e));
+  };
+
   useEffect(() => {
     fetchOrders();
 
     const channel = supabase
       .channel('kitchen_orders')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => {
+        playBell();
         fetchOrders();
       })
       .subscribe();
@@ -37,7 +43,7 @@ export default function KitchenBoard() {
 
     const { data, error } = await supabase
       .from('orders')
-      .select(`*, restaurant_tables(table_number), order_items(product_id, products(name, description), quantity)`)
+      .select(`*, restaurant_tables(table_number), order_items(product_id, products(name, description, quick_delivery), quantity)`)
       .eq('restaurant_id', restaurantId)
       .neq('status', 'delivered')
       .order('created_at', { ascending: true });
@@ -120,7 +126,9 @@ export default function KitchenBoard() {
                     <div className="space-y-2">
                       <p className="text-xs font-semibold text-slate-400 uppercase tracking-tight">Platillos</p>
                       <div className="space-y-2">
-                        {order.order_items?.map((item: any, idx: number) => (
+                        {order.order_items
+                          ?.filter((item: any) => !item.products?.quick_delivery)
+                          .map((item: any, idx: number) => (
                           <div key={idx} className="flex justify-between text-sm border-b border-slate-100 pb-1">
                             <span className="text-slate-700">
                               <span className="font-bold mr-2">{item.quantity}x</span>

@@ -38,11 +38,12 @@ CREATE TABLE products (
     category TEXT,
     image_url TEXT,
     is_available BOOLEAN DEFAULT true,
+    quick_delivery BOOLEAN DEFAULT false,
     created_at TIMESTAMPTZ DEFAULT now()
 );
 
 -- 5. Create Orders Table
-CREATE TYPE order_status AS ENUM ('pending', 'confirmed', 'preparing', 'ready', 'delivered', 'cancelled');
+CREATE TYPE order_status AS ENUM ('pending', 'confirmed', 'preparing', 'ready', 'delivered', 'cancelled', 'paid');
 
 CREATE TABLE orders (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -51,6 +52,7 @@ CREATE TABLE orders (
     customer_name TEXT,
     status order_status DEFAULT 'pending',
     total_price DECIMAL(10, 2) DEFAULT 0,
+    payment_method TEXT, -- 'Cash', 'SINPE', 'Card'
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now()
 );
@@ -113,10 +115,28 @@ CREATE OR REPLACE FUNCTION create_customer_order(
 DECLARE
     v_order_id UUID;
 BEGIN
-    INSERT INTO orders (restaurant_id, table_id, status, total_price)
-    VALUES (p_restaurant_id, p_table_id, 'confirmed', p_total_price)
-    RETURNING id INTO v_order_id;
+    -- Find active order for the table (not delivered or cancelled)
+    SELECT id INTO v_order_id
+    FROM orders
+    WHERE table_id = p_table_id
+      AND status NOT IN ('delivered', 'cancelled')
+    ORDER BY created_at DESC
+    LIMIT 1;
 
+    IF v_order_id IS NOT NULL THEN
+        -- Update existing order total price
+        UPDATE orders
+        SET total_price = total_price + p_total_price,
+            updated_at = now()
+        WHERE id = v_order_id;
+    ELSE
+        -- Create new order
+        INSERT INTO orders (restaurant_id, table_id, status, total_price)
+        VALUES (p_restaurant_id, p_table_id, 'confirmed', p_total_price)
+        RETURNING id INTO v_order_id;
+    END IF;
+
+    -- Insert new items
     INSERT INTO order_items (order_id, product_id, quantity, notes)
     SELECT v_order_id, (item->>'product_id')::UUID, (item->>'quantity')::INT, item->>'notes'
     FROM jsonb_array_elements(p_items) AS item;

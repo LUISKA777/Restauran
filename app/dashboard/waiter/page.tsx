@@ -27,12 +27,19 @@ export default function WaiterPanel() {
   const [cart, setCart] = useState<{ productId: string; quantity: number }[]>([]);
   const [loading, setLoading] = useState(true);
   const [readyOrders, setReadyOrders] = useState<Order[]>([]);
+  const [immediateOrders, setImmediateOrders] = useState<Order[]>([]);
   const [notificationActive, setNotificationActive] = useState(false);
   const router = useRouter();
+
+  const playBell = () => {
+    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2876/2876-preview.mp3');
+    audio.play().catch(e => console.log('Audio playback failed', e));
+  };
 
   useEffect(() => {
     fetchInitialData();
     fetchReadyOrders();
+    fetchImmediateOrders();
 
     // Real-time subscription for ready orders
     const channel = supabase
@@ -43,10 +50,12 @@ export default function WaiterPanel() {
         table: 'orders'
       }, (payload) => {
         if (payload.new?.status === 'ready') {
+          playBell();
           fetchReadyOrders();
           setNotificationActive(true);
           setTimeout(() => setNotificationActive(false), 5000);
         }
+        fetchImmediateOrders();
       })
       .subscribe();
 
@@ -66,7 +75,7 @@ export default function WaiterPanel() {
 
     const { data: productsData } = await supabase
       .from('products')
-      .select('id, name, price, category')
+      .select('id, name, price, category, quick_delivery')
       .eq('restaurant_id', restaurantId)
       .eq('is_available', true);
 
@@ -88,6 +97,26 @@ export default function WaiterPanel() {
 
     if (error) console.error('Error fetching ready orders:', error);
     else if (data) setReadyOrders(data);
+  }
+
+  async function fetchImmediateOrders() {
+    const restaurantId = localStorage.getItem('restaurant_id');
+    if (!restaurantId) return;
+
+    const { data, error } = await supabase
+      .from('orders')
+      .select(`*, restaurant_tables(table_number), order_items(product_id, products(name, description, quick_delivery), quantity)`)
+      .eq('restaurant_id', restaurantId)
+      .eq('status', 'confirmed')
+      .order('created_at', { ascending: true });
+
+    if (error) console.error('Error fetching immediate orders:', error);
+    else if (data) {
+      const filtered = data.filter(order =>
+        order.order_items?.some((item: any) => item.products?.quick_delivery)
+      );
+      setImmediateOrders(filtered);
+    }
   }
 
   async function markAsDelivered(orderId: string) {
@@ -206,6 +235,51 @@ export default function WaiterPanel() {
             <button onClick={() => setNotificationActive(false)} className="text-white/80 hover:text-white">Cerrar</button>
           </div>
         )}
+
+        {/* IMMEDIATE DELIVERY SECTION */}
+        <section className="space-y-4">
+          <h2 className="text-lg font-semibold text-gray-700 flex items-center gap-2">
+            <Bell size={20} className="text-orange-600" /> Entregas Inmediatas (Bebidas/Rápidos)
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {immediateOrders.length === 0 ? (
+              <div className="col-span-full p-6 bg-gray-100 rounded-2xl text-center text-gray-400 border border-dashed border-gray-300">
+                No hay entregas inmediatas pendientes.
+              </div>
+            ) : (
+              immediateOrders.map(order => (
+                <div key={order.id} className="bg-white p-4 rounded-2xl border-2 border-orange-200 shadow-sm space-y-3 relative group hover:border-orange-500 transition-colors">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <span className="text-xs font-bold uppercase text-orange-600">
+                        {order.is_takeaway ? '🥡 Para Llevar' : `Mesa ${order.restaurant_tables?.table_number || 'N/A'}`}
+                      </span>
+                      <h3 className="font-bold text-gray-900">{order.customer_name || 'Anónimo'}</h3>
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-gray-500">
+                      <Users size={12} /> {order.people_count} pers.
+                    </div>
+                  </div>
+
+                  <div className="space-y-1 bg-orange-50 p-2 rounded-lg">
+                    {order.order_items?.filter((item: any) => item.products?.quick_delivery).map((item: any, idx: number) => (
+                      <div key={idx} className="text-xs flex justify-between text-gray-600">
+                        <span className="font-bold text-orange-700">{item.quantity}x {item.products?.name}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={() => markAsDelivered(order.id)}
+                    className="w-full py-2 bg-orange-600 text-white text-sm font-bold rounded-xl hover:bg-orange-700 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <CheckCircle2 size={16} /> Marcar como Entregado
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        </section>
 
         {/* READY ORDERS SECTION */}
         <section className="space-y-4">

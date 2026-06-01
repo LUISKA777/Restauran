@@ -50,12 +50,11 @@ export default async function MenuPage({ params }: { params: Promise<{ restauran
     );
   }
 
-  // 3. Get available products
+  // 3. Get all products for this restaurant
   const { data: products, error: productsError } = await supabase
     .from('products')
     .select('*')
-    .eq('restaurant_id', restaurantId)
-    .eq('is_available', true);
+    .eq('restaurant_id', restaurantId);
 
   if (productsError) {
     return (

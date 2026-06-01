@@ -27,11 +27,13 @@ interface Product {
   category: string;
   image_url: string;
   is_available: boolean;
+  quick_delivery: boolean;
 }
 
 export default function AdminMenuPage() {
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
+  const [categoriesList, setCategoriesList] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState('All');
@@ -45,7 +47,8 @@ export default function AdminMenuPage() {
     price: '',
     category: '',
     image_url: '',
-    is_available: true
+    is_available: true,
+    quick_delivery: false
   });
 
   useEffect(() => {
@@ -61,17 +64,30 @@ export default function AdminMenuPage() {
       return;
     }
 
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .eq('restaurant_id', restaurantId)
-      .order('name', { ascending: true });
+    // Fetch both products and restaurant settings (for categories)
+    const [productsRes, settingsRes] = await Promise.all([
+      supabase
+        .from('products')
+        .select('*')
+        .eq('restaurant_id', restaurantId)
+        .order('name', { ascending: true }),
+      supabase
+        .from('restaurants')
+        .select('settings')
+        .eq('id', restaurantId)
+        .single()
+    ]);
 
-    if (error) {
-      console.error('Error fetching products:', error);
+    if (productsRes.error) {
+      console.error('Error fetching products:', productsRes.error);
     } else {
-      setProducts(data || []);
+      setProducts(productsRes.data || []);
     }
+
+    if (settingsRes.data?.settings?.categories) {
+      setCategoriesList(settingsRes.data.settings.categories);
+    }
+
     setLoading(false);
   }
 
@@ -84,7 +100,8 @@ export default function AdminMenuPage() {
         price: product.price.toString(),
         category: product.category || 'General',
         image_url: product.image_url || '',
-        is_available: product.is_available
+        is_available: product.is_available,
+        quick_delivery: product.quick_delivery || false
       });
     } else {
       setEditingProduct(null);
@@ -92,13 +109,27 @@ export default function AdminMenuPage() {
         name: '',
         description: '',
         price: '',
-        category: 'General',
+        category: categoriesList[0] || 'General',
         image_url: '',
-        is_available: true
+        is_available: true,
+        quick_delivery: false
       });
     }
     setIsModalOpen(true);
   };
+
+  async function toggleAvailability(product: Product) {
+    try {
+      const { error } = await supabase
+        .from('products')
+        .update({ is_available: !product.is_available })
+        .eq('id', product.id);
+      if (error) throw error;
+      await fetchProducts();
+    } catch (err) {
+      console.error('Error toggling availability:', err);
+    }
+  }
 
   async function handleSaveProduct() {
     const restaurantId = localStorage.getItem('restaurant_id');
@@ -111,6 +142,7 @@ export default function AdminMenuPage() {
       category: formData.category,
       image_url: formData.image_url,
       is_available: formData.is_available,
+      quick_delivery: formData.quick_delivery,
       restaurant_id: restaurantId
     };
 
@@ -374,17 +406,31 @@ export default function AdminMenuPage() {
                 />
               </div>
 
-              <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
-                <input
-                  type="checkbox"
-                  id="is_available"
-                  checked={formData.is_available}
-                  onChange={(e) => setFormData({ ...formData, is_available: e.target.checked })}
-                  className="w-5 h-5 accent-orange-500"
-                />
-                <label htmlFor="is_available" className="text-sm font-bold text-slate-700 cursor-pointer">
-                  Disponible para la venta
-                </label>
+              <div className="flex flex-col gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-slate-100">
+                  <input
+                    type="checkbox"
+                    id="is_available"
+                    checked={formData.is_available}
+                    onChange={(e) => setFormData({ ...formData, is_available: e.target.checked })}
+                    className="w-5 h-5 accent-orange-500"
+                  />
+                  <label htmlFor="is_available" className="text-sm font-bold text-slate-700 cursor-pointer">
+                    Disponible para la venta
+                  </label>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-slate-100">
+                  <input
+                    type="checkbox"
+                    id="quick_delivery"
+                    checked={formData.quick_delivery}
+                    onChange={(e) => setFormData({ ...formData, quick_delivery: e.target.checked })}
+                    className="w-5 h-5 accent-orange-500"
+                  />
+                  <label htmlFor="quick_delivery" className="text-sm font-bold text-slate-700 cursor-pointer">
+                    Entrega rápida (no va a cocina)
+                  </label>
+                </div>
               </div>
             </div>
 

@@ -27,6 +27,13 @@ export default function AdminDashboard() {
 
   const quickLinks = [
     {
+      name: 'Configuración de Marca',
+      path: '/dashboard/admin/settings',
+      icon: <Settings />,
+      color: 'bg-slate-600',
+      description: 'Personaliza los colores y la identidad de tu restaurante.'
+    },
+    {
       name: 'Control de Mesas',
       path: '/dashboard/admin/tables',
       icon: <TableProperties />,
@@ -46,6 +53,13 @@ export default function AdminDashboard() {
       icon: <Utensils />,
       color: 'bg-orange-500',
       description: 'Gestiona platillos, precios y disponibilidad.'
+    },
+    {
+      name: 'Facturas y Cobros',
+      path: '/dashboard/admin/invoices',
+      icon: <DollarSign />,
+      color: 'bg-blue-500',
+      description: 'Gestiona cuentas pendientes y procesa pagos.'
     },
     {
       name: 'Reportes y Ventas',
