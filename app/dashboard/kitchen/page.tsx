@@ -43,7 +43,7 @@ export default function KitchenBoard() {
 
     const { data, error } = await supabase
       .from('orders')
-      .select(`*, restaurant_tables(table_number), order_items(product_id, products(name, description, quick_delivery), quantity)`)
+      .select(`*, restaurant_tables(table_number), order_items(product_id, notes, products(name, description, quick_delivery), quantity)`)
       .eq('restaurant_id', restaurantId)
       .neq('status', 'delivered')
       .neq('status', 'paid')
@@ -131,15 +131,22 @@ export default function KitchenBoard() {
                         {order.order_items
                           ?.filter((item: any) => !item.products?.quick_delivery)
                           .map((item: any, idx: number) => (
-                          <div key={idx} className="flex justify-between text-sm border-b border-slate-100 pb-1">
-                            <span className="text-slate-700">
-                              <span className="font-bold mr-2">{item.quantity}x</span>
-                              {item.products?.name}
-                            </span>
-                            {item.products?.description && (
-                              <span className="text-xs text-slate-400 italic truncate max-w-32">
-                                {item.products.description}
+                          <div key={idx} className="flex flex-col border-b border-slate-100 pb-2">
+                            <div className="flex justify-between text-sm">
+                              <span className="text-slate-700">
+                                <span className="font-bold mr-2">{item.quantity}x</span>
+                                {item.products?.name}
                               </span>
+                              {item.products?.description && (
+                                <span className="text-xs text-slate-400 italic truncate max-w-32">
+                                  {item.products.description}
+                                </span>
+                              )}
+                            </div>
+                            {item.notes && (
+                              <div className="mt-1 px-2 py-1 bg-amber-50 text-amber-700 text-[11px] font-bold rounded-md border border-amber-100 italic">
+                                📝 {item.notes}
+                              </div>
                             )}
                           </div>
                         ))}
