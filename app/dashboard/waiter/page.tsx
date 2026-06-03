@@ -29,6 +29,7 @@ export default function WaiterPanel() {
   const [readyOrders, setReadyOrders] = useState<Order[]>([]);
   const [immediateOrders, setImmediateOrders] = useState<Order[]>([]);
   const [notificationActive, setNotificationActive] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
   const playBell = () => {
@@ -122,7 +123,8 @@ export default function WaiterPanel() {
       .from('orders')
       .select(`*, restaurant_tables(table_number), order_items(id, product_id, products(name, description, quick_delivery), quantity, delivered)`)
       .eq('restaurant_id', restaurantId)
-      .eq('status', 'confirmed')
+      .neq('status', 'delivered')
+      .neq('status', 'cancelled')
       .order('created_at', { ascending: true });
 
     if (error) console.error('Error fetching immediate orders:', error);
@@ -208,53 +210,77 @@ export default function WaiterPanel() {
     const restaurantId = localStorage.getItem('restaurant_id');
     if (!restaurantId) return;
 
-    const total = cart.reduce((acc, item) => {
-      const p = products.find(prod => prod.id === item.productId);
-      return acc + (p?.price || 0) * item.quantity;
-    }, 0);
+    setIsSubmitting(true);
+    try {
+      const total = cart.reduce((acc, item) => {
+        const p = products.find(prod => prod.id === item.productId);
+        return acc + (p?.price || 0) * item.quantity;
+      }, 0);
 
-    let orderId: string;
+      let orderId: string;
 
-    if (!isTakeaway && selectedTable) {
-      // Check if there's an active order for this table
-      const { data: activeOrder, error: activeError } = await supabase
-        .from('orders')
-        .select('id, total_price')
-        .eq('restaurant_id', restaurantId)
-        .eq('table_id', selectedTable)
-        .neq('status', 'delivered')
-        .neq('status', 'cancelled')
-        .order('created_at', { ascending: false });
-
-      if (!activeError && activeOrder && activeOrder.length > 0) {
-        const active = activeOrder[0];
-        orderId = active.id;
-        const newTotal = (active.total_price || 0) + total;
-
-        const { error: updateError } = await supabase
+      if (!isTakeaway && selectedTable) {
+        // Check if there's an active order for this table
+        const { data: activeOrder, error: activeError } = await supabase
           .from('orders')
-          .update({
-            total_price: newTotal,
-            status: 'confirmed', // Reset to confirmed if it was delivered/ready
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', orderId);
+          .select('id, total_price')
+          .eq('restaurant_id', restaurantId)
+          .eq('table_id', selectedTable)
+          .neq('status', 'delivered')
+          .neq('status', 'cancelled')
+          .order('created_at', { ascending: false });
 
-        if (updateError) {
-          alert('Error al actualizar el pedido existente');
-          return;
+        if (!activeError && activeOrder && activeOrder.length > 0) {
+          const active = activeOrder[0];
+          orderId = active.id;
+          const newTotal = (active.total_price || 0) + total;
+
+          const { error: updateError } = await supabase
+            .from('orders')
+            .update({
+              total_price: newTotal,
+              status: 'confirmed', // Reset to confirmed if it was delivered/ready
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', orderId);
+
+          if (updateError) {
+            alert('Error al actualizar el pedido existente');
+            return;
+          }
+        } else {
+          // No active order, create new one
+          const { data: newOrder, error: newOrderError } = await supabase
+            .from('orders')
+            .insert({
+              restaurant_id: restaurantId,
+              table_id: selectedTable,
+              customer_name: customerName,
+              status: 'confirmed',
+              total_price: total,
+              is_takeaway: false,
+              people_count: peopleCount
+            })
+            .select()
+            .single();
+
+          if (newOrderError) {
+            alert('Error al crear el pedido');
+            return;
+          }
+          orderId = newOrder.id;
         }
       } else {
-        // No active order, create new one
+        // Takeaway always creates a new order
         const { data: newOrder, error: newOrderError } = await supabase
           .from('orders')
           .insert({
             restaurant_id: restaurantId,
-            table_id: selectedTable,
+            table_id: null,
             customer_name: customerName,
             status: 'confirmed',
             total_price: total,
-            is_takeaway: false,
+            is_takeaway: true,
             people_count: peopleCount
           })
           .select()
@@ -266,47 +292,31 @@ export default function WaiterPanel() {
         }
         orderId = newOrder.id;
       }
-    } else {
-      // Takeaway always creates a new order
-      const { data: newOrder, error: newOrderError } = await supabase
-        .from('orders')
-        .insert({
-          restaurant_id: restaurantId,
-          table_id: null,
-          customer_name: customerName,
-          status: 'confirmed',
-          total_price: total,
-          is_takeaway: true,
-          people_count: peopleCount
-        })
-        .select()
-        .single();
 
-      if (newOrderError) {
-        alert('Error al crear el pedido');
-        return;
+      const orderItems = cart.map(item => ({
+        order_id: orderId,
+        product_id: item.productId,
+        quantity: item.quantity,
+        notes: item.notes
+      }));
+
+      const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
+
+      if (itemsError) {
+        alert('Error al agregar productos al pedido');
+      } else {
+        alert('Pedido enviado a cocina con éxito!');
+        setCart([]);
+        setSelectedTable(null);
+        setCustomerName('');
+        setPeopleCount(1);
+        setIsTakeaway(false);
       }
-      orderId = newOrder.id;
-    }
-
-    const orderItems = cart.map(item => ({
-      order_id: orderId,
-      product_id: item.productId,
-      quantity: item.quantity,
-      notes: item.notes
-    }));
-
-    const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
-
-    if (itemsError) {
-      alert('Error al agregar productos al pedido');
-    } else {
-      alert('Pedido enviado a cocina con éxito!');
-      setCart([]);
-      setSelectedTable(null);
-      setCustomerName('');
-      setPeopleCount(1);
-      setIsTakeaway(false);
+    } catch (err) {
+      console.error('Error sending order:', err);
+      alert('Hubo un error al enviar el pedido');
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -606,10 +616,10 @@ export default function WaiterPanel() {
 
           <button
             onClick={sendOrder}
-            disabled={(!selectedTable && !isTakeaway) || cart.length === 0}
+            disabled={(!selectedTable && !isTakeaway) || cart.length === 0 || isSubmitting}
             className="w-full py-4 bg-green-600 text-white font-bold rounded-2xl hover:bg-green-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Send size={20} /> Confirmar y Enviar a Cocina
+            <Send size={20} /> {isSubmitting ? 'Enviando...' : 'Confirmar y Enviar a Cocina'}
           </button>
         </div>
       </div>
