@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Clock, CheckCircle, Flame, Package, Truck, RotateCcw, Users, UtensilsCrossed, XCircle, Banknote } from 'lucide-react';
+import { Clock, CheckCircle, Flame, Package, Truck, RotateCcw, Users, UtensilsCrossed, XCircle, Banknote, Bell } from 'lucide-react';
 import { Order, OrderStatus } from '@/types/order';
 
 const STATUS_COLORS: Record<OrderStatus, { bg: string; text: string; icon: any }> = {
@@ -19,7 +19,7 @@ export default function KitchenBoard() {
   const [loading, setLoading] = useState(true);
 
   const playBell = () => {
-    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3');
+    const audio = new Audio('https://cdn.pixabay.com/audio/2022/03/10/audio_cba687da81.mp3');
     audio.play().catch(e => console.log('Audio playback failed', e));
   };
 
@@ -76,12 +76,20 @@ export default function KitchenBoard() {
             <h1 className="text-3xl font-bold text-slate-900">Tablero de Cocina</h1>
             <p className="text-slate-500">Monitorea y gestiona los pedidos en tiempo real</p>
           </div>
-          <button
-            onClick={() => window.location.href = '/dashboard/role-selection'}
-            className="px-4 py-2 bg-white border rounded-lg text-sm font-medium hover:bg-gray-50 flex items-center gap-2"
-          >
-            <RotateCcw size={16} /> Cambiar Rol
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={playBell}
+              className="px-4 py-2 bg-white border rounded-lg text-sm font-medium hover:bg-gray-50 flex items-center gap-2"
+            >
+              <Bell size={16} /> Probar Timbre
+            </button>
+            <button
+              onClick={() => window.location.href = '/dashboard/role-selection'}
+              className="px-4 py-2 bg-white border rounded-lg text-sm font-medium hover:bg-gray-50 flex items-center gap-2"
+            >
+              <RotateCcw size={16} /> Cambiar Rol
+            </button>
+          </div>
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

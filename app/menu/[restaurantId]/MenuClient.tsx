@@ -92,23 +92,6 @@ export default function MenuClient({
       return;
     }
 
-    // Check for existing active order for this table
-    const { data: activeOrder, error: activeError } = await supabase
-      .from('orders')
-      .select('id')
-      .eq('restaurant_id', restaurantId)
-      .eq('table_id', selectedTableId)
-      .neq('status', 'paid')
-      .neq('status', 'cancelled')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
-
-    if (!activeError && activeOrder) {
-      const confirmAdd = window.confirm('Ya tienes una cuenta pendiente en esta mesa, ¿deseas agregar esto nuevo?');
-      if (!confirmAdd) return;
-    }
-
     setIsSubmitting(true);
     try {
       const itemsPayload = cart.map(item => ({

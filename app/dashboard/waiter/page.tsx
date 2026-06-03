@@ -32,7 +32,7 @@ export default function WaiterPanel() {
   const router = useRouter();
 
   const playBell = () => {
-    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/1015/1015-preview.mp3');
+    const audio = new Audio('https://cdn.pixabay.com/audio/2021/08/04/audio_0627779232.mp3');
     audio.play().catch(e => console.log('Audio playback failed', e));
   };
 
@@ -323,18 +323,26 @@ export default function WaiterPanel() {
             </div>
             <h1 className="text-2xl font-bold text-gray-900">Panel de Mesero</h1>
           </div>
-          <button
-            onClick={() => window.location.href = '/dashboard/role-selection'}
-            className="px-4 py-2 bg-white border rounded-lg text-sm font-medium hover:bg-gray-50 flex items-center gap-2"
-          >
-            <RotateCcw size={16} /> Cambiar Rol
-          </button>
-          <button
-            onClick={() => router.push('/dashboard/admin/invoices')}
-            className="px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-bold hover:bg-orange-600 flex items-center gap-2 transition-colors shadow-sm"
-          >
-            <Receipt size={16} /> Facturas y Cobros
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={playBell}
+              className="px-4 py-2 bg-white border rounded-lg text-sm font-medium hover:bg-gray-50 flex items-center gap-2"
+            >
+              <Bell size={16} /> Probar Timbre
+            </button>
+            <button
+              onClick={() => window.location.href = '/dashboard/role-selection'}
+              className="px-4 py-2 bg-white border rounded-lg text-sm font-medium hover:bg-gray-50 flex items-center gap-2"
+            >
+              <RotateCcw size={16} /> Cambiar Rol
+            </button>
+            <button
+              onClick={() => router.push('/dashboard/admin/invoices')}
+              className="px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-bold hover:bg-orange-600 flex items-center gap-2 transition-colors shadow-sm"
+            >
+              <Receipt size={16} /> Facturas y Cobros
+            </button>
+          </div>
         </header>
 
         {/* NOTIFICATION BANNER */}
