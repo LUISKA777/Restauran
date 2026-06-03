@@ -2,8 +2,9 @@ import React from 'react';
 import { supabase } from '@/lib/supabase';
 import MenuClient from './MenuClient';
 
-export default async function MenuPage({ params }: { params: Promise<{ restaurantId: string }> }) {
+export default async function MenuPage({ params, searchParams }: { params: Promise<{ restaurantId: string }>, searchParams: Promise<{ table?: string }> }) {
   const { restaurantId } = await params;
+  const { table } = await searchParams;
 
   // 1. Get restaurant info
   const { data: restaurant, error: restaurantError } = await supabase
@@ -87,6 +88,7 @@ export default async function MenuPage({ params }: { params: Promise<{ restauran
       categoriesMap={categoriesMap}
       restaurantId={restaurantId}
       tables={tables || []}
+      initialTableId={table}
     />
   );
 }

@@ -30,6 +30,7 @@ interface MenuClientProps {
   categoriesMap: Record<string, Product[]>;
   restaurantId: string;
   tables: Table[];
+  initialTableId?: string;
 }
 
 export default function MenuClient({
@@ -39,9 +40,10 @@ export default function MenuClient({
   categories,
   categoriesMap,
   restaurantId,
-  tables
+  tables,
+  initialTableId
 }: MenuClientProps) {
-  const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
+  const [selectedTableId, setSelectedTableId] = useState<string | null>(initialTableId || null);
   const [activeCategory, setActiveCategory] = useState(categories[0] || 'General');
   const [cart, setCart] = useState<{ product: Product, quantity: number }[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
