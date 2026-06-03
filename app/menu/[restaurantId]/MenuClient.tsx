@@ -122,7 +122,6 @@ export default function MenuClient({
         p_table_id: selectedTableId,
         p_items: itemsPayload,
         p_total_price: cartTotal,
-        p_notes: orderNotes
       });
 
       if (error) throw error;
