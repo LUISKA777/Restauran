@@ -51,7 +51,7 @@ export default function InvoicesPage() {
       .from('orders')
       .select(`*, restaurant_tables(table_number), order_items(product_id, quantity, products(name, price))`)
       .eq('restaurant_id', restaurantId)
-      .neq('status', 'paid')
+      .eq('is_paid', false)
       .neq('status', 'cancelled')
       .order('created_at', { ascending: true });
 
@@ -67,11 +67,12 @@ export default function InvoicesPage() {
       const { error } = await supabase
         .from('orders')
         .update({
-          status: 'paid',
+          is_paid: true,
           payment_method: paymentMethod,
           updated_at: new Date().toISOString()
         })
         .eq('id', selectedOrder.id);
+
 
       if (error) throw error;
 

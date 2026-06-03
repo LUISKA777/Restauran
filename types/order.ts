@@ -26,6 +26,7 @@ export interface Order {
   people_count: number;
   notes?: string;
   total_price: number;
+  is_paid: boolean;
   restaurant_tables?: { table_number: number };
   order_items?: OrderItem[];
 }

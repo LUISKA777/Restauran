@@ -222,7 +222,7 @@ export default function WaiterPanel() {
         .select('id, total_price')
         .eq('restaurant_id', restaurantId)
         .eq('table_id', selectedTable)
-        .neq('status', 'paid')
+        .neq('status', 'delivered')
         .neq('status', 'cancelled')
         .order('created_at', { ascending: false });
 

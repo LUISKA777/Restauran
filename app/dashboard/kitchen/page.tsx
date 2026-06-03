@@ -48,7 +48,6 @@ export default function KitchenBoard() {
       .select(`*, restaurant_tables(table_number), order_items(product_id, notes, products(name, description, quick_delivery), quantity)`)
       .eq('restaurant_id', restaurantId)
       .neq('status', 'delivered')
-      .neq('status', 'paid')
       .neq('status', 'cancelled')
       .order('created_at', { ascending: true });
 
