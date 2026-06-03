@@ -84,7 +84,9 @@ export default function QRCenter() {
     );
   }
 
-  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(menuUrl)}`;
+  const qrImageUrl = menuUrl
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(menuUrl)}`
+    : null;
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row">
@@ -182,11 +184,17 @@ export default function QRCenter() {
               </div>
 
               <div className="p-6 bg-gray-50 rounded-3xl border-4 border-white shadow-2xl">
-                <img
-                  src={qrImageUrl}
-                  alt="QR Menu"
-                  className="w-64 h-64 object-contain"
-                />
+                {qrImageUrl ? (
+                  <img
+                    src={qrImageUrl}
+                    alt="QR Menu"
+                    className="w-64 h-64 object-contain"
+                  />
+                ) : (
+                  <div className="w-64 h-64 bg-slate-100 animate-pulse flex items-center justify-center text-slate-300">
+                    <QrCode size={64} />
+                  </div>
+                )}
               </div>
               <div className="space-y-2">
                 <h3 className="text-xl font-bold text-slate-900">QR Digital General</h3>
