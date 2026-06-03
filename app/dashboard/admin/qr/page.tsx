@@ -86,7 +86,7 @@ export default function QRCenter() {
 
   const qrImageUrl = menuUrl
     ? `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(menuUrl)}`
-    : null;
+    : undefined;
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row">
