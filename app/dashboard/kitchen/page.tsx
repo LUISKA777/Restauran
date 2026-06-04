@@ -32,6 +32,9 @@ export default function KitchenBoard() {
         playBell();
         fetchOrders();
       })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'order_items' }, (payload) => {
+        fetchOrders();
+      })
       .subscribe();
 
     return () => {
