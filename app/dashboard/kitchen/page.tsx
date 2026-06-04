@@ -19,7 +19,7 @@ export default function KitchenBoard() {
   const [loading, setLoading] = useState(true);
 
   const playBell = () => {
-    const audio = new Audio('https://cdn.pixabay.com/audio/2022/03/10/audio_cba687da81.mp3');
+    const audio = new Audio('https://cdn.pixabay.com/audio/2021/08/04/audio_0627779232.mp3');
     audio.play().catch(e => console.log('Audio playback failed', e));
   };
 
