@@ -29,7 +29,7 @@ export default function QRCenter() {
       // Set a reasonable default: use production URL if we are on localhost
       const origin = window.location.origin;
       if (origin.includes('localhost')) {
-        setBaseUrl('https://restauran-navy.vercel.app');
+        setBaseUrl('https://restaurant-navy.vercel.app');
       } else {
         setBaseUrl(origin);
       }
