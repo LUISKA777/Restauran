@@ -1,5 +1,6 @@
 import React from 'react';
 import { Plus } from 'lucide-react';
+import type { CardStyle, AspectRatio } from '@/types/menuSettings';
 
 interface Product {
   id: string;
@@ -13,14 +14,49 @@ interface Product {
 interface ProductCardProps {
   product: Product;
   onAdd: (product: Product) => void;
+  density?: CardStyle;
+  aspect?: AspectRatio;
+  fallbackDescription?: string;
 }
 
-export function ProductCard({ product, onAdd }: ProductCardProps) {
+const PADDING_MAP: Record<CardStyle, string> = {
+  compact: 'p-3',
+  comfortable: 'p-4',
+  spacious: 'p-6',
+};
+
+const ASPECT_MAP: Record<AspectRatio, string> = {
+  square: 'aspect-square',
+  '4-3': 'aspect-[4/3]',
+  '16-9': 'aspect-video',
+};
+
+const TITLE_SIZE_MAP: Record<CardStyle, string> = {
+  compact: 'text-base',
+  comfortable: 'text-lg',
+  spacious: 'text-xl',
+};
+
+const DESC_SIZE_MAP: Record<CardStyle, string> = {
+  compact: 'text-[11px]',
+  comfortable: 'text-xs',
+  spacious: 'text-sm',
+};
+
+export function ProductCard({
+  product,
+  onAdd,
+  density = 'comfortable',
+  aspect = '4-3',
+  fallbackDescription = 'Un sabor excepcional preparado con los mejores ingredientes.',
+}: ProductCardProps) {
   const isUnavailable = product.is_available === false;
+  const paddingClass = PADDING_MAP[density];
+  const aspectClass = ASPECT_MAP[aspect];
 
   return (
     <div className={`bg-white/5 backdrop-blur-md rounded-3xl border border-white/10 shadow-sm overflow-hidden flex flex-col transition-all hover:shadow-xl ${isUnavailable ? 'opacity-60 grayscale-[0.5] cursor-not-allowed' : 'hover:border-[var(--color-primary)]/60 group active:scale-[0.98]'}`}>
-      <div className="relative aspect-[4/3] overflow-hidden">
+      <div className={`relative overflow-hidden ${aspectClass}`}>
         {product.image_url ? (
           <img
             src={product.image_url}
@@ -46,12 +82,12 @@ export function ProductCard({ product, onAdd }: ProductCardProps) {
         )}
       </div>
 
-      <div className="p-4 space-y-2">
-        <h3 className={`font-bold text-lg leading-tight transition-colors ${isUnavailable ? 'text-white/30' : 'text-white group-hover:text-[var(--color-primary)]'}`}>
+      <div className={`${paddingClass} space-y-2`}>
+        <h3 className={`font-bold ${TITLE_SIZE_MAP[density]} leading-tight transition-colors ${isUnavailable ? 'text-white/30' : 'text-white group-hover:text-[var(--color-primary)]'}`}>
           {product.name}
         </h3>
-        <p className="text-xs text-white/40 line-clamp-2 leading-relaxed min-h-[2.5rem]">
-          {product.description || 'Un sabor excepcional preparado con los mejores ingredientes.'}
+        <p className={`${DESC_SIZE_MAP[density]} text-white/40 line-clamp-2 leading-relaxed ${density === 'compact' ? 'min-h-[2rem]' : 'min-h-[2.5rem]'}`}>
+          {product.description || fallbackDescription}
         </p>
 
         <div className="pt-2">

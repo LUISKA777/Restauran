@@ -47,7 +47,10 @@ module.exports = {
         },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['var(--font-sans, var(--font-inter))', 'Inter', 'system-ui', 'sans-serif'],
+        serif: ['var(--font-serif)', 'Playfair Display', 'serif'],
+        display: ['var(--font-display)', 'Bebas Neue', 'sans-serif'],
+        handwritten: ['var(--font-handwritten)', 'Caveat', 'cursive'],
       },
       boxShadow: {
         'soft': '0 2px 12px -2px rgba(15, 23, 42, 0.08)',

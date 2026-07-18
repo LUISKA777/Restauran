@@ -1,5 +1,6 @@
 import React from 'react';
 import { supabase } from '@/lib/supabase';
+import { mergeSettings } from '@/types/menuSettings';
 import MenuClient from './MenuClient';
 
 export default async function MenuPage({ params, searchParams }: { params: Promise<{ restaurantId: string }>, searchParams: Promise<{ table?: string }> }) {
@@ -82,7 +83,7 @@ export default async function MenuPage({ params, searchParams }: { params: Promi
   return (
     <MenuClient
       restaurantName={restaurant.name}
-      settings={restaurant.settings}
+      settings={mergeSettings(restaurant.settings)}
       products={products}
       categories={categories}
       categoriesMap={categoriesMap}

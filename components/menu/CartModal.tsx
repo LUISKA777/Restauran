@@ -21,6 +21,10 @@ interface CartModalProps {
   total: number;
   orderNotes: string;
   setOrderNotes: (notes: string) => void;
+  emptyCartMessage?: string;
+  orderNotesPlaceholder?: string;
+  submitButtonLabel?: string;
+  submittingLabel?: string;
 }
 
 export function CartModal({
@@ -33,7 +37,11 @@ export function CartModal({
   isSubmitting,
   total,
   orderNotes,
-  setOrderNotes
+  setOrderNotes,
+  emptyCartMessage = 'Tu carrito está vacío. ¡Agrega algo rico!',
+  orderNotesPlaceholder = 'Ej: Por favor, sin cebolla en el plato fuerte...',
+  submitButtonLabel = 'Confirmar y Enviar a Cocina',
+  submittingLabel = 'Enviando pedido...',
 }: CartModalProps) {
   if (!isOpen) return null;
 
@@ -58,7 +66,7 @@ export function CartModal({
           <div className="max-h-60 overflow-y-auto space-y-3 pr-2">
             {items.length === 0 ? (
               <div className="text-center py-10 text-white/30 italic">
-                Tu carrito está vacío. ¡Agrega algo rico!
+                {emptyCartMessage}
               </div>
             ) : (
               items.map(item => (
@@ -98,7 +106,7 @@ export function CartModal({
             <textarea
               value={orderNotes}
               onChange={(e) => setOrderNotes(e.target.value)}
-              placeholder="Ej: Por favor, sin cebolla en el plato fuerte..."
+              placeholder={orderNotesPlaceholder}
               className="w-full p-3 bg-white/5 border border-white/10 rounded-2xl text-sm text-white placeholder:text-white/20 outline-none focus:ring-2 focus:ring-[var(--color-primary)] transition-all min-h-[80px] resize-none"
             />
           </div>
@@ -113,7 +121,7 @@ export function CartModal({
               disabled={items.length === 0 || isSubmitting}
               className="w-full py-4 bg-[var(--color-primary)] text-white font-bold rounded-2xl hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {isSubmitting ? 'Enviando pedido...' : 'Confirmar y Enviar a Cocina'}
+              {isSubmitting ? submittingLabel : submitButtonLabel}
             </button>
           </div>
         </div>
