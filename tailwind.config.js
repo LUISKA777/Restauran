@@ -91,9 +91,9 @@ module.exports = {
         },
       },
       animation: {
-        'fade-in': 'fade-in 0.4s ease-out',
-        'slide-up': 'slide-up 0.5s ease-out',
-        'scale-in': 'scale-in 0.2s ease-out',
+        'fade-in': 'fade-in 0.4s ease-out forwards',
+        'slide-up': 'slide-up 0.5s ease-out forwards',
+        'scale-in': 'scale-in 0.2s ease-out forwards',
         'pulse-slow': 'pulse-slow 2.5s ease-in-out infinite',
         'ring-bell': 'ring-bell 1s ease-in-out infinite',
         'shimmer': 'shimmer 2.5s linear infinite',
