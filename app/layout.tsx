@@ -5,7 +5,7 @@ const inter = Inter({ subsets: ['latin'] });
 
 export const metadata = {
   title: 'Gestión de Restaurante',
-  description: 'Sistema de administración para restaurantes',
+  description: 'Sistema de administración para restaurantes - v2',
 };
 
 export default function RootLayout({
