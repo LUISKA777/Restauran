@@ -1,11 +1,21 @@
 import './globals.css';
 import { Inter } from 'next/font/google';
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+});
 
 export const metadata = {
-  title: 'Gestión de Restaurante',
+  title: 'RestaurantOS — Gestión inteligente para tu restaurante',
   description: 'Sistema de administración para restaurantes - v2',
+};
+
+export const viewport = {
+  themeColor: '#f97316',
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export default function RootLayout({
@@ -14,8 +24,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es">
-      <body className={inter.className}>{children}</body>
+    <html lang="es" className={inter.variable}>
+      <body className="antialiased">{children}</body>
     </html>
   );
 }
+

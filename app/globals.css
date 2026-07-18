@@ -1,3 +1,128 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-ink-50 text-ink-900 font-sans;
+    background-image:
+      radial-gradient(at 0% 0%, rgba(249, 115, 22, 0.04) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.04) 0px, transparent 50%);
+    background-attachment: fixed;
+  }
+
+  ::selection {
+    @apply bg-brand-200 text-brand-900;
+  }
+
+  /* Smooth scrollbar */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-ink-200 rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-ink-300;
+  }
+}
+
+@layer components {
+  /* === BUTTONS === */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-offset-2;
+  }
+  .btn-primary {
+    @apply btn bg-brand-500 text-white hover:bg-brand-600 focus:ring-brand-400 shadow-glow-brand;
+  }
+  .btn-secondary {
+    @apply btn bg-ink-100 text-ink-700 hover:bg-ink-200 focus:ring-ink-300;
+  }
+  .btn-royal {
+    @apply btn bg-royal-600 text-white hover:bg-royal-700 focus:ring-royal-400 shadow-glow-royal;
+  }
+  .btn-success {
+    @apply btn bg-emerald-600 text-white hover:bg-emerald-700 focus:ring-emerald-400 shadow-glow-green;
+  }
+  .btn-danger {
+    @apply btn bg-rose-600 text-white hover:bg-rose-700 focus:ring-rose-400;
+  }
+  .btn-ghost {
+    @apply btn bg-transparent text-ink-600 hover:bg-ink-100 focus:ring-ink-300;
+  }
+
+  /* === CARDS === */
+  .card {
+    @apply bg-white rounded-2xl border border-ink-200/60 shadow-soft;
+  }
+  .card-hover {
+    @apply card transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 hover:border-ink-300;
+  }
+
+  /* === INPUTS === */
+  .input {
+    @apply w-full px-4 py-2.5 bg-white border border-ink-200 rounded-xl text-sm text-ink-900 placeholder-ink-400 outline-none transition-all duration-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-100;
+  }
+  .input-royal:focus {
+    @apply border-royal-500 ring-royal-100;
+  }
+
+  /* === BADGES === */
+  .badge {
+    @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider;
+  }
+  .badge-success { @apply badge bg-emerald-100 text-emerald-700; }
+  .badge-warning { @apply badge bg-amber-100 text-amber-700; }
+  .badge-danger  { @apply badge bg-rose-100 text-rose-700; }
+  .badge-info    { @apply badge bg-sky-100 text-sky-700; }
+  .badge-brand   { @apply badge bg-brand-100 text-brand-700; }
+  .badge-royal   { @apply badge bg-royal-100 text-royal-700; }
+
+  /* === TABLE === */
+  .table-clean {
+    @apply w-full text-left border-collapse;
+  }
+  .table-clean thead th {
+    @apply px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-ink-500 bg-ink-50/50 border-b border-ink-200;
+  }
+  .table-clean tbody td {
+    @apply px-6 py-4 text-sm text-ink-700 border-b border-ink-100;
+  }
+  .table-clean tbody tr {
+    @apply transition-colors hover:bg-ink-50/50;
+  }
+
+  /* === LAYOUT HELPERS === */
+  .glass {
+    @apply bg-white/80 backdrop-blur-xl border border-white/40;
+  }
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-brand-500 to-royal-500;
+  }
+
+  /* Skeleton loader */
+  .skeleton {
+    @apply bg-gradient-to-r from-ink-100 via-ink-200/60 to-ink-100 bg-[length:200%_100%] animate-shimmer rounded-md;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Custom ring-bell animation class (referenced by lucide-react via animate-ring in waiter panel) */
+  .animate-ring {
+    animation: ring-bell 1s ease-in-out infinite;
+  }
+}

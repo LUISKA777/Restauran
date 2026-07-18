@@ -16,7 +16,8 @@ import {
   Image as ImageIcon,
   DollarSign,
   Tag,
-  LayoutList
+  LayoutList,
+  Zap
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
@@ -67,7 +68,6 @@ export default function AdminMenuPage() {
       return;
     }
 
-    // Fetch both products and restaurant settings (for categories)
     const [productsRes, settingsRes] = await Promise.all([
       supabase
         .from('products')
@@ -206,126 +206,150 @@ export default function AdminMenuPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-slate-500 font-medium">Cargando menú de productos...</p>
+      <div className="min-h-screen flex items-center justify-center bg-ink-50">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-12 h-12 border-4 border-brand-200 border-t-brand-500 rounded-full animate-spin" />
+          <p className="text-sm text-ink-500 font-medium">Cargando menú...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="flex items-center justify-between mb-8">
+    <div className="min-h-screen p-6 lg:p-10 max-w-7xl mx-auto">
+      {/* Header */}
+      <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8 animate-fade-in">
         <div className="flex items-center gap-4">
           <button
             onClick={() => router.back()}
-            className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+            className="p-2 hover:bg-ink-100 rounded-xl transition-colors text-ink-600"
           >
             <ArrowLeft size={20} />
           </button>
-          <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
-            <Utensils className="text-orange-500" /> Menú de Productos
-          </h1>
+          <div>
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 bg-brand-100 text-brand-700 rounded-full text-xs font-bold mb-2">
+              <Utensils size={12} /> Catálogo
+            </div>
+            <h1 className="text-3xl font-black text-ink-900 tracking-tight">Menú de Productos</h1>
+            <p className="text-ink-500 mt-1">{filteredProducts.length} productos visibles</p>
+          </div>
         </div>
-        <button
-          onClick={() => handleOpenModal()}
-          className="flex items-center gap-2 px-6 py-3 bg-orange-500 text-white rounded-2xl font-bold hover:bg-orange-600 transition-all shadow-lg shadow-orange-200 active:scale-95"
-        >
+        <button onClick={() => handleOpenModal()} className="btn-primary">
           <Plus size={20} /> Agregar Producto
         </button>
-      </div>
+      </header>
 
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
         {/* Filters Sidebar */}
-        <div className="xl:col-span-1 space-y-6">
-          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+        <div className="xl:col-span-1 space-y-4 animate-slide-up">
+          <div className="card p-5 space-y-4 sticky top-6">
             <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                <Search size={16} /> Buscar producto
+              <label className="text-sm font-bold text-ink-700 flex items-center gap-2">
+                <Search size={14} /> Buscar
               </label>
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-orange-500 transition-all"
+                className="input"
                 placeholder="Nombre o descripción..."
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                <Filter size={16} /> Categoría
+              <label className="text-sm font-bold text-ink-700 flex items-center gap-2">
+                <Filter size={14} /> Categoría
               </label>
               <select
                 value={filterCategory}
                 onChange={(e) => setFilterCategory(e.target.value)}
-                className="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-orange-500 transition-all"
+                className="input cursor-pointer"
               >
                 {categories.map(cat => (
                   <option key={cat} value={cat}>{cat}</option>
                 ))}
               </select>
             </div>
+
+            <div className="pt-2 border-t border-ink-100 grid grid-cols-2 gap-2 text-center">
+              <div className="p-2 bg-emerald-50 rounded-xl">
+                <p className="text-2xl font-black text-emerald-700">
+                  {products.filter(p => p.is_available).length}
+                </p>
+                <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Disponibles</p>
+              </div>
+              <div className="p-2 bg-rose-50 rounded-xl">
+                <p className="text-2xl font-black text-rose-700">
+                  {products.filter(p => !p.is_available).length}
+                </p>
+                <p className="text-[10px] font-bold text-rose-600 uppercase tracking-wider">Agotados</p>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Products List */}
-        <div className="xl:col-span-3 space-y-4">
+        <div className="xl:col-span-3">
           {filteredProducts.length === 0 ? (
-            <div className="bg-white p-20 rounded-3xl border border-slate-200 shadow-sm text-center space-y-4">
-              <Package size={48} className="mx-auto text-slate-300" />
-              <h3 className="text-xl font-bold text-slate-800">No se encontraron productos</h3>
-              <p className="text-slate-500">Intenta ajustar los filtros o agregar un nuevo producto al menú.</p>
+            <div className="card p-20 text-center space-y-3 animate-fade-in">
+              <div className="w-16 h-16 bg-ink-100 rounded-2xl flex items-center justify-center mx-auto">
+                <Package size={28} className="text-ink-400" />
+              </div>
+              <h3 className="text-xl font-bold text-ink-900">No se encontraron productos</h3>
+              <p className="text-ink-500">Intenta ajustar los filtros o agrega un nuevo producto al menú.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {filteredProducts.map(product => (
+              {filteredProducts.map((product, idx) => (
                 <div
                   key={product.id}
-                  className={`bg-white p-4 rounded-2xl border-2 transition-all flex items-center gap-4 group ${
-                    product.is_available ? 'border-slate-100 hover:border-orange-500' : 'border-red-100 bg-red-50/30 opacity-75'
+                  style={{ animationDelay: `${idx * 50}ms` }}
+                  className={`card-hover p-4 flex items-center gap-4 group animate-slide-up opacity-0 ${
+                    !product.is_available ? 'opacity-60 grayscale' : ''
                   }`}
                 >
-                  <div className="w-16 h-16 rounded-xl bg-slate-100 overflow-hidden flex-shrink-0 border border-slate-200">
+                  <div className="w-16 h-16 rounded-2xl bg-ink-100 overflow-hidden flex-shrink-0 border border-ink-200">
                     {product.image_url ? (
                       <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs p-2 text-center">
+                      <div className="w-full h-full flex items-center justify-center text-ink-400 text-[10px] p-1 text-center font-medium">
                         Sin imagen
                       </div>
                     )}
                   </div>
-                  <div className="flex-grow space-y-1">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-bold text-slate-900">{product.name}</h3>
-                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                        product.is_available ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
+                  <div className="flex-grow min-w-0 space-y-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="font-bold text-ink-900 truncate">{product.name}</h3>
+                      <span className={`badge shrink-0 ${
+                        product.is_available ? 'badge-success' : 'badge-danger'
                       }`}>
                         {product.is_available ? 'Disponible' : 'Agotado'}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-slate-500">
-                      <span className="bg-slate-100 px-2 py-0.5 rounded-md">{product.category || 'General'}</span>
-                      <span>•</span>
-                      <span className="font-bold text-slate-700">₡{product.price.toFixed(0)}</span>
+                    <div className="flex items-center gap-1.5 text-xs">
+                      <span className="badge-brand">{product.category || 'General'}</span>
+                      {product.quick_delivery && (
+                        <span className="badge bg-amber-100 text-amber-700">
+                          <Zap size={10} /> Rápido
+                        </span>
+                      )}
                     </div>
+                    <p className="text-sm font-black text-ink-900">₡{product.price.toFixed(0)}</p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col gap-1">
                     <button
                       onClick={() => handleOpenModal(product)}
-                      className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                      className="p-2 text-ink-400 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition-all active:scale-90"
                       title="Editar"
                     >
-                      <Pencil size={18} />
+                      <Pencil size={16} />
                     </button>
                     <button
                       onClick={() => handleDeleteProduct(product.id)}
-                      className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                      className="p-2 text-ink-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all active:scale-90"
                       title="Eliminar"
                     >
-                      <Trash2 size={18} />
+                      <Trash2 size={16} />
                     </button>
                   </div>
                 </div>
@@ -337,135 +361,136 @@ export default function AdminMenuPage() {
 
       {/* Product Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in duration-200">
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-              <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                {editingProduct ? <Pencil size={20} /> : <Plus size={20} />}
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-900/60 backdrop-blur-sm animate-fade-in"
+          onClick={() => setIsModalOpen(false)}
+        >
+          <div
+            className="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-scale-in max-h-[90vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-5 border-b border-ink-100 flex items-center justify-between bg-ink-50/50">
+              <h2 className="text-lg font-black text-ink-900 flex items-center gap-2">
+                <span className="p-1.5 bg-brand-100 text-brand-600 rounded-lg">
+                  {editingProduct ? <Pencil size={16} /> : <Plus size={16} />}
+                </span>
                 {editingProduct ? 'Editar Producto' : 'Nuevo Producto'}
               </h2>
-              <button onClick={() => setIsModalOpen(false)} className="p-1 hover:bg-slate-200 rounded-full transition-colors">
-                <X size={20} />
+              <button onClick={() => setIsModalOpen(false)} className="p-1.5 hover:bg-ink-200 rounded-lg transition-colors text-ink-500">
+                <X size={18} />
               </button>
             </div>
-            <div className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+            <div className="p-6 space-y-4 overflow-y-auto flex-1">
               <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                  <Package size={16} /> Nombre del Plato
+                <label className="text-sm font-bold text-ink-700 flex items-center gap-2">
+                  <Package size={14} /> Nombre del Plato
                 </label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-orange-500 transition-all"
+                  className="input"
                   placeholder="Ej: Hamburguesa Deluxe"
                 />
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                  <Tag size={16} /> Categoría
-                </label>
-                <input
-                  type="text"
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-orange-500 transition-all"
-                  placeholder="Ej: Platos Fuertes, Bebidas..."
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-ink-700 flex items-center gap-2">
+                    <Tag size={14} /> Categoría
+                  </label>
+                  <input
+                    type="text"
+                    list="categories-list"
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    className="input"
+                    placeholder="Ej: Platos Fuertes"
+                  />
+                  <datalist id="categories-list">
+                    {categoriesList.map(c => <option key={c} value={c} />)}
+                  </datalist>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-ink-700 flex items-center gap-2">
+                    <DollarSign size={14} /> Precio (₡)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={formData.price}
+                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    className="input"
+                    placeholder="0.00"
+                  />
+                </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                  <DollarSign size={16} /> Precio (₡)
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  className="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-orange-500 transition-all"
-                  placeholder="0.00"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                  <LayoutList size={16} /> Orden en el Menú
+                <label className="text-sm font-bold text-ink-700 flex items-center gap-2">
+                  <LayoutList size={14} /> Orden en el Menú
                 </label>
                 <input
                   type="number"
                   value={formData.sort_order}
                   onChange={(e) => setFormData({ ...formData, sort_order: e.target.value })}
-                  className="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-orange-500 transition-all"
+                  className="input"
                   placeholder="0"
                 />
-                <p className="text-[10px] text-slate-400">Los platos con números menores aparecen primero.</p>
+                <p className="text-[10px] text-ink-500">Los platos con números menores aparecen primero.</p>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                  <ImageIcon size={16} /> URL de Imagen (Opcional)
+                <label className="text-sm font-bold text-ink-700 flex items-center gap-2">
+                  <ImageIcon size={14} /> URL de Imagen
                 </label>
                 <input
                   type="text"
                   value={formData.image_url}
                   onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                  className="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-orange-500 transition-all"
+                  className="input"
                   placeholder="https://images.unsplash.com/..."
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-700">Descripción</label>
+                <label className="text-sm font-bold text-ink-700">Descripción</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-orange-500 transition-all h-24 resize-none"
+                  className="input h-24 resize-none"
                   placeholder="Describe los ingredientes y el sabor..."
                 />
               </div>
 
-              <div className="flex flex-col gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
-                <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-slate-100">
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <label className="flex items-center gap-3 p-3 bg-ink-50 rounded-xl border border-ink-200 cursor-pointer hover:border-emerald-300 transition-colors">
                   <input
                     type="checkbox"
-                    id="is_available"
                     checked={formData.is_available}
                     onChange={(e) => setFormData({ ...formData, is_available: e.target.checked })}
-                    className="w-5 h-5 accent-orange-500"
+                    className="w-5 h-5 accent-emerald-500"
                   />
-                  <label htmlFor="is_available" className="text-sm font-bold text-slate-700 cursor-pointer">
-                    Disponible para la venta
-                  </label>
-                </div>
-                <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-slate-100">
+                  <span className="text-sm font-bold text-ink-700">Disponible</span>
+                </label>
+                <label className="flex items-center gap-3 p-3 bg-ink-50 rounded-xl border border-ink-200 cursor-pointer hover:border-amber-300 transition-colors">
                   <input
                     type="checkbox"
-                    id="quick_delivery"
                     checked={formData.quick_delivery}
                     onChange={(e) => setFormData({ ...formData, quick_delivery: e.target.checked })}
-                    className="w-5 h-5 accent-orange-500"
+                    className="w-5 h-5 accent-amber-500"
                   />
-                  <label htmlFor="quick_delivery" className="text-sm font-bold text-slate-700 cursor-pointer">
-                    Entrega rápida (no va a cocina)
-                  </label>
-                </div>
+                  <span className="text-sm font-bold text-ink-700">Entrega rápida</span>
+                </label>
               </div>
             </div>
 
-            <div className="p-6 border-t border-slate-100 flex gap-3">
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="flex-1 px-4 py-3 bg-slate-100 text-slate-600 font-bold rounded-2xl hover:bg-slate-200 transition-all"
-              >
+            <div className="p-5 border-t border-ink-100 flex gap-3 bg-ink-50/30">
+              <button onClick={() => setIsModalOpen(false)} className="btn-secondary flex-1">
                 Cancelar
               </button>
-              <button
-                onClick={handleSaveProduct}
-                className="flex-1 px-4 py-3 bg-orange-500 text-white font-bold rounded-2xl hover:bg-orange-600 transition-all flex items-center justify-center gap-2 shadow-lg shadow-orange-200"
-              >
-                <Save size={20} /> Guardar
+              <button onClick={handleSaveProduct} className="btn-primary flex-1">
+                <Save size={18} /> Guardar
               </button>
             </div>
           </div>

@@ -320,90 +320,106 @@ export default function WaiterPanel() {
     }
   }
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center">Cargando panel de mesero...</div>;
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center bg-ink-50">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-12 h-12 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin" />
+        <p className="text-sm text-ink-500 font-medium">Cargando panel de mesero...</p>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row">
+    <div className="min-h-screen flex flex-col lg:flex-row bg-ink-50">
       {/* Left side: Table, Menu and Ready Orders */}
       <div className="flex-grow p-6 space-y-6 overflow-y-auto">
-        <header className="flex justify-between items-center">
+        <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 animate-fade-in">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-green-100 text-green-600 rounded-lg">
-              <UserCheck size={24} />
+            <div className="p-2.5 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl shadow-glow-green">
+              <UserCheck size={22} />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">Panel de Mesero</h1>
+            <div>
+              <h1 className="text-2xl font-black text-ink-900 tracking-tight">Panel de Mesero</h1>
+              <p className="text-xs text-ink-500">Toma y seguimiento de pedidos</p>
+            </div>
           </div>
-          <div className="flex gap-2">
-            <button
-              onClick={playBell}
-              className="px-4 py-2 bg-white border rounded-lg text-sm font-medium hover:bg-gray-50 flex items-center gap-2"
-            >
-              <Bell size={16} /> Probar Timbre
+          <div className="flex gap-2 flex-wrap">
+            <button onClick={playBell} className="btn-secondary text-xs">
+              <Bell size={14} /> Probar Timbre
             </button>
             <button
               onClick={() => window.location.href = '/dashboard/role-selection'}
-              className="px-4 py-2 bg-white border rounded-lg text-sm font-medium hover:bg-gray-50 flex items-center gap-2"
+              className="btn-secondary text-xs"
             >
-              <RotateCcw size={16} /> Cambiar Rol
+              <RotateCcw size={14} /> Cambiar Rol
             </button>
             <button
               onClick={() => router.push('/dashboard/admin/invoices')}
-              className="px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-bold hover:bg-orange-600 flex items-center gap-2 transition-colors shadow-sm"
+              className="btn-primary text-xs"
             >
-              <Receipt size={16} /> Facturas y Cobros
+              <Receipt size={14} /> Facturas
             </button>
           </div>
         </header>
 
         {/* NOTIFICATION BANNER */}
         {notificationActive && (
-          <div className="bg-green-600 text-white p-4 rounded-2xl shadow-lg flex items-center justify-between animate-bounce">
+          <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white p-4 rounded-2xl shadow-glow-green flex items-center justify-between animate-slide-up">
             <div className="flex items-center gap-3">
               <Bell className="animate-ring" />
               <span className="font-bold">¡Hay pedidos listos para entregar!</span>
             </div>
-            <button onClick={() => setNotificationActive(false)} className="text-white/80 hover:text-white">Cerrar</button>
+            <button onClick={() => setNotificationActive(false)} className="text-white/80 hover:text-white text-sm font-medium">
+              Cerrar
+            </button>
           </div>
         )}
 
         {/* IMMEDIATE DELIVERY SECTION */}
-        <section className="space-y-4">
-          <h2 className="text-lg font-semibold text-gray-700 flex items-center gap-2">
-            <Bell size={20} className="text-orange-600" /> Entregas Inmediatas (Bebidas/Rápidos)
+        <section className="space-y-3">
+          <h2 className="text-base font-black text-ink-700 flex items-center gap-2">
+            <span className="p-1.5 bg-brand-100 text-brand-600 rounded-lg">
+              <Bell size={14} />
+            </span>
+            Entregas Inmediatas (Rápidos)
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {immediateOrders.length === 0 ? (
-              <div className="col-span-full p-6 bg-gray-100 rounded-2xl text-center text-gray-400 border border-dashed border-gray-300">
+              <div className="col-span-full p-8 bg-white rounded-2xl text-center text-ink-400 border border-dashed border-ink-200 text-sm">
                 No hay entregas inmediatas pendientes.
               </div>
             ) : (
-              immediateOrders.map(order => (
-                <div key={order.id} className="bg-white p-4 rounded-2xl border-2 border-orange-200 shadow-sm space-y-3 relative group hover:border-orange-500 transition-colors">
+              immediateOrders.map((order, idx) => (
+                <div
+                  key={order.id}
+                  style={{ animationDelay: `${idx * 50}ms` }}
+                  className="card-hover p-4 border-2 border-brand-200 space-y-3 animate-slide-up opacity-0"
+                >
                   <div className="flex justify-between items-start">
-                    <div>
-                      <span className="text-xs font-bold uppercase text-orange-600">
+                    <div className="min-w-0 flex-1">
+                      <span className="badge-brand">
                         {order.is_takeaway ? '🥡 Para Llevar' : `Mesa ${order.restaurant_tables?.table_number || 'N/A'}`}
                       </span>
-                      <h3 className="font-bold text-gray-900">{order.customer_name || 'Anónimo'}</h3>
+                      <h3 className="font-bold text-ink-900 mt-1 truncate">{order.customer_name || 'Anónimo'}</h3>
                     </div>
-                    <div className="flex items-center gap-1 text-xs text-gray-500">
-                      <Users size={12} /> {order.people_count} pers.
+                    <div className="flex items-center gap-1 text-[10px] text-ink-500 font-bold shrink-0 ml-2">
+                      <Users size={11} /> {order.people_count} pers.
                     </div>
                   </div>
 
-                  <div className="space-y-1 bg-orange-50 p-2 rounded-lg">
+                  <div className="space-y-1 bg-brand-50 p-2.5 rounded-xl border border-brand-100">
                     {order.order_items?.filter((item: any) => item.products?.quick_delivery && !item.delivered).map((item: any, idx: number) => (
-                      <div key={idx} className="text-xs flex justify-between text-gray-600">
-                        <span className="font-bold text-orange-700">{item.quantity}x {item.products?.name}</span>
+                      <div key={idx} className="text-xs flex justify-between text-ink-600">
+                        <span className="font-bold text-brand-700">{item.quantity}x {item.products?.name}</span>
                       </div>
                     ))}
                   </div>
 
                   <button
                     onClick={() => markAsDelivered(order.id, true)}
-                    className="w-full py-2 bg-orange-600 text-white text-sm font-bold rounded-xl hover:bg-orange-700 transition-colors flex items-center justify-center gap-2"
+                    className="w-full py-2 bg-gradient-brand text-white text-xs font-bold rounded-xl shadow-glow-brand hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-1.5"
                   >
-                    <CheckCircle2 size={16} /> Entregar Rápidos
+                    <CheckCircle2 size={14} /> Entregar Rápidos
                   </button>
                 </div>
               ))
@@ -412,33 +428,40 @@ export default function WaiterPanel() {
         </section>
 
         {/* READY ORDERS SECTION */}
-        <section className="space-y-4">
-          <h2 className="text-lg font-semibold text-gray-700 flex items-center gap-2">
-            <CheckCircle2 size={20} className="text-green-600" /> Pedidos Listos para Entregar
+        <section className="space-y-3">
+          <h2 className="text-base font-black text-ink-700 flex items-center gap-2">
+            <span className="p-1.5 bg-emerald-100 text-emerald-600 rounded-lg">
+              <CheckCircle2 size={14} />
+            </span>
+            Pedidos Listos para Entregar
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {readyOrders.length === 0 ? (
-              <div className="col-span-full p-6 bg-gray-100 rounded-2xl text-center text-gray-400 border border-dashed border-gray-300">
+              <div className="col-span-full p-8 bg-white rounded-2xl text-center text-ink-400 border border-dashed border-ink-200 text-sm">
                 No hay pedidos listos en este momento.
               </div>
             ) : (
-              readyOrders.map(order => (
-                <div key={order.id} className="bg-white p-4 rounded-2xl border-2 border-green-200 shadow-sm space-y-3 relative group hover:border-green-500 transition-colors">
+              readyOrders.map((order, idx) => (
+                <div
+                  key={order.id}
+                  style={{ animationDelay: `${idx * 50}ms` }}
+                  className="card-hover p-4 border-2 border-emerald-200 space-y-3 animate-slide-up opacity-0"
+                >
                   <div className="flex justify-between items-start">
-                    <div>
-                      <span className="text-xs font-bold uppercase text-green-600">
+                    <div className="min-w-0 flex-1">
+                      <span className="badge-success">
                         {order.is_takeaway ? '🥡 Para Llevar' : `Mesa ${order.restaurant_tables?.table_number || 'N/A'}`}
                       </span>
-                      <h3 className="font-bold text-gray-900">{order.customer_name || 'Anónimo'}</h3>
+                      <h3 className="font-bold text-ink-900 mt-1 truncate">{order.customer_name || 'Anónimo'}</h3>
                     </div>
-                    <div className="flex items-center gap-1 text-xs text-gray-500">
-                      <Users size={12} /> {order.people_count} pers.
+                    <div className="flex items-center gap-1 text-[10px] text-ink-500 font-bold shrink-0 ml-2">
+                      <Users size={11} /> {order.people_count} pers.
                     </div>
                   </div>
 
-                  <div className="space-y-1 bg-gray-50 p-2 rounded-lg">
+                  <div className="space-y-1 bg-ink-50 p-2.5 rounded-xl border border-ink-100">
                     {order.order_items?.map((item: any, idx: number) => (
-                      <div key={idx} className="text-xs flex justify-between text-gray-600">
+                      <div key={idx} className="text-xs flex justify-between text-ink-600">
                         <span>{item.quantity}x {item.products?.name}</span>
                       </div>
                     ))}
@@ -446,9 +469,9 @@ export default function WaiterPanel() {
 
                   <button
                     onClick={() => markAsDelivered(order.id)}
-                    className="w-full py-2 bg-green-600 text-white text-sm font-bold rounded-xl hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+                    className="w-full py-2 bg-emerald-600 text-white text-xs font-bold rounded-xl hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center gap-1.5"
                   >
-                    <CheckCircle2 size={16} /> Marcar como Entregado
+                    <CheckCircle2 size={14} /> Marcar como Entregado
                   </button>
                 </div>
               ))
@@ -456,18 +479,21 @@ export default function WaiterPanel() {
           </div>
         </section>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {/* Table Selection */}
-          <section className="space-y-4">
-            <h2 className="text-lg font-semibold text-gray-700 flex items-center gap-2">
-              <Table size={20} /> Detalles del Nuevo Pedido
+          <section className="space-y-3">
+            <h2 className="text-base font-black text-ink-700 flex items-center gap-2">
+              <span className="p-1.5 bg-royal-100 text-royal-600 rounded-lg">
+                <Table size={14} />
+              </span>
+              Detalles del Nuevo Pedido
             </h2>
 
-            <div className="space-y-4 bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
+            <div className="space-y-4 card p-4">
+              <div className="flex items-center justify-between p-3 bg-ink-50 rounded-xl border border-ink-100">
                 <div className="flex items-center gap-2">
-                  <Package size={18} className="text-gray-500" />
-                  <span className="text-sm font-medium text-gray-700">¿Es pedido para llevar?</span>
+                  <Package size={16} className="text-ink-500" />
+                  <span className="text-sm font-bold text-ink-700">¿Es pedido para llevar?</span>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
@@ -476,50 +502,56 @@ export default function WaiterPanel() {
                     checked={isTakeaway}
                     onChange={(e) => setIsTakeaway(e.target.checked)}
                   />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                  <div className="w-11 h-6 bg-ink-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-ink-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
                 </label>
               </div>
 
               {!isTakeaway && (
-                <div className="space-y-3">
-                  <label className="text-sm font-medium text-gray-600 block">Seleccionar Mesa</label>
-                  <div className="grid grid-cols-4 gap-3">
-                    {tables.map(table => (
-                      <button
-                        key={table.id}
-                        onClick={() => setSelectedTable(table.id)}
-                        className={`p-4 rounded-xl border transition-all ${
-                          selectedTable === table.id
-                          ? 'bg-green-600 text-white border-green-600 shadow-lg ring-2 ring-green-200'
-                          : 'bg-white text-gray-600 border-gray-200 hover:border-green-500'
-                        }`}
-                      >
-                        <span className="text-lg font-bold">{table.table_number}</span>
-                      </button>
-                    ))}
-                  </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-ink-600 block">Seleccionar Mesa</label>
+                  {tables.length === 0 ? (
+                    <div className="p-4 text-center text-sm text-ink-400 bg-ink-50 rounded-xl border border-dashed border-ink-200">
+                      No hay mesas configuradas
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-4 gap-2">
+                      {tables.map(table => (
+                        <button
+                          key={table.id}
+                          onClick={() => setSelectedTable(table.id)}
+                          className={`p-3 rounded-xl border-2 transition-all font-black text-lg active:scale-95 ${
+                            selectedTable === table.id
+                            ? 'bg-emerald-600 text-white border-emerald-600 shadow-glow-green'
+                            : 'bg-white text-ink-600 border-ink-200 hover:border-emerald-400'
+                          }`}
+                        >
+                          {table.table_number}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-600 block">Cliente (Opcional)</label>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-sm font-bold text-ink-600 block">Cliente (Opcional)</label>
                   <input
                     type="text"
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
-                    className="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-green-500"
+                    className="input"
                     placeholder="Ej: Juan Perez"
                   />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-600 block">Nº Personas</label>
+                <div className="space-y-1.5">
+                  <label className="text-sm font-bold text-ink-600 block">Nº Personas</label>
                   <input
                     type="number"
                     min="1"
                     value={peopleCount}
                     onChange={(e) => setPeopleCount(parseInt(e.target.value) || 1)}
-                    className="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-green-500"
+                    className="input"
                   />
                 </div>
               </div>
@@ -527,64 +559,84 @@ export default function WaiterPanel() {
           </section>
 
           {/* Menu selection */}
-          <section className="space-y-4">
-            <h2 className="text-lg font-semibold text-gray-700 flex items-center gap-2">
-              <ShoppingBag size={20} /> Menú de Productos
+          <section className="space-y-3">
+            <h2 className="text-base font-black text-ink-700 flex items-center gap-2">
+              <span className="p-1.5 bg-brand-100 text-brand-600 rounded-lg">
+                <ShoppingBag size={14} />
+              </span>
+              Menú de Productos
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {products.map(product => (
-                <button
-                  key={product.id}
-                  onClick={() => addToCart(product.id)}
-                  className="p-3 bg-white border border-gray-200 rounded-xl text-left hover:border-green-500 transition-all flex justify-between items-center group"
-                >
-                  <div>
-                    <p className="font-medium text-gray-800 group-hover:text-green-600 transition-colors">{product.name}</p>
-                    <p className="text-xs text-gray-400">₡{product.price}</p>
-                  </div>
-                  <div className="p-1 bg-gray-100 rounded-full group-hover:bg-green-100 group-hover:text-green-600 transition-colors">
-                    <Plus size={16} />
-                  </div>
-                </button>
-              ))}
-            </div>
+            {products.length === 0 ? (
+              <div className="card p-8 text-center text-ink-400 text-sm">
+                No hay productos disponibles
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-96 overflow-y-auto pr-1">
+                {products.map(product => (
+                  <button
+                    key={product.id}
+                    onClick={() => addToCart(product.id)}
+                    className="card-hover p-3 text-left flex justify-between items-center group"
+                  >
+                    <div className="min-w-0">
+                      <p className="font-bold text-ink-800 text-sm group-hover:text-emerald-700 transition-colors truncate">
+                        {product.name}
+                      </p>
+                      <p className="text-xs text-ink-500 font-bold">₡{product.price}</p>
+                    </div>
+                    <div className="p-1.5 bg-ink-100 rounded-lg group-hover:bg-emerald-100 group-hover:text-emerald-600 transition-colors shrink-0">
+                      <Plus size={14} />
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
           </section>
         </div>
       </div>
 
       {/* Right side: Cart/Order Summary */}
-      <div className="w-full lg:w-96 bg-white border-l border-gray-200 p-6 flex flex-col shadow-2xl">
-        <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-          <ShoppingBag size={20} className="text-green-600" /> Resumen del Pedido
-        </h2>
+      <div className="w-full lg:w-96 bg-white border-l border-ink-200 p-5 flex flex-col shadow-2xl">
+        <div className="flex items-center gap-2 mb-5 pb-4 border-b border-ink-100">
+          <span className="p-2 bg-emerald-100 text-emerald-700 rounded-xl">
+            <ShoppingBag size={18} />
+          </span>
+          <h2 className="text-lg font-black text-ink-900">Resumen del Pedido</h2>
+        </div>
 
-        <div className="flex-grow space-y-4 overflow-y-auto max-h-[calc(100vh-300px)]">
+        <div className="flex-grow space-y-3 overflow-y-auto max-h-[calc(100vh-300px)] pr-1">
           {cart.length === 0 ? (
-            <div className="text-center py-12 text-gray-400">
-              <p className="text-sm italic">El pedido está vacío</p>
+            <div className="text-center py-12 text-ink-400">
+              <div className="w-12 h-12 bg-ink-100 rounded-2xl flex items-center justify-center mx-auto mb-2">
+                <ShoppingBag size={20} className="opacity-50" />
+              </div>
+              <p className="text-sm italic font-medium">El pedido está vacío</p>
+              <p className="text-xs mt-1">Agrega productos del menú</p>
             </div>
           ) : (
             cart.map(item => {
               const product = products.find(p => p.id === item.productId);
               return (
-                <div key={item.productId} className="flex flex-col p-3 bg-gray-50 rounded-xl border border-gray-100 space-y-3">
+                <div key={item.productId} className="flex flex-col p-3 bg-ink-50 rounded-xl border border-ink-100 space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <div className="flex-grow">
-                      <p className="text-sm font-medium text-gray-800">{product?.name}</p>
-                      <p className="text-xs text-gray-500">₡{product?.price}</p>
+                    <div className="flex-grow min-w-0">
+                      <p className="text-sm font-bold text-ink-800 truncate">{product?.name}</p>
+                      <p className="text-xs text-ink-500">₡{product?.price}</p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 shrink-0">
                       <button
                         onClick={() => removeFromCart(item.productId)}
-                        className="p-1 text-gray-500 hover:text-red-600"
-                        title="Eliminar producto"
+                        className="p-1 text-ink-500 hover:text-rose-600 rounded-md"
+                        title="Eliminar"
                       >
                         <X size={14} />
                       </button>
-                      <span className="text-sm font-bold w-6 text-center">{item.quantity}</span>
+                      <span className="text-sm font-black w-7 text-center bg-white rounded-md py-0.5 border border-ink-200">
+                        {item.quantity}
+                      </span>
                       <button
                         onClick={() => updateQuantity(item.productId, 1)}
-                        className="p-1 text-gray-500 hover:text-green-600"
+                        className="p-1 text-ink-500 hover:text-emerald-600 rounded-md"
                       >
                         <Plus size={14} />
                       </button>
@@ -595,7 +647,7 @@ export default function WaiterPanel() {
                     value={item.notes}
                     onChange={(e) => updateItemNotes(item.productId, e.target.value)}
                     placeholder="Notas (ej: Sin cebolla, término medio...)"
-                    className="w-full px-3 py-1.5 text-xs border rounded-lg outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                    className="w-full px-2.5 py-1.5 text-xs border border-ink-200 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
                   />
                 </div>
               );
@@ -603,10 +655,10 @@ export default function WaiterPanel() {
           )}
         </div>
 
-        <div className="mt-6 pt-6 border-t border-gray-200 space-y-4">
-          <div className="flex justify-between items-center">
-            <span className="text-gray-500">Total Estimado</span>
-            <span className="text-xl font-bold text-gray-900">
+        <div className="mt-5 pt-4 border-t border-ink-200 space-y-4">
+          <div className="flex justify-between items-center p-3 bg-ink-50 rounded-xl">
+            <span className="text-sm font-bold text-ink-500">Total Estimado</span>
+            <span className="text-xl font-black text-ink-900">
               ₡{cart.reduce((acc, item) => {
                 const p = products.find(prod => prod.id === item.productId);
                 return acc + (p?.price || 0) * item.quantity;
@@ -617,9 +669,9 @@ export default function WaiterPanel() {
           <button
             onClick={sendOrder}
             disabled={(!selectedTable && !isTakeaway) || cart.length === 0 || isSubmitting}
-            className="w-full py-4 bg-green-600 text-white font-bold rounded-2xl hover:bg-green-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-bold rounded-xl shadow-glow-green transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            <Send size={20} /> {isSubmitting ? 'Enviando...' : 'Confirmar y Enviar a Cocina'}
+            <Send size={18} /> {isSubmitting ? 'Enviando...' : 'Confirmar y Enviar a Cocina'}
           </button>
         </div>
       </div>

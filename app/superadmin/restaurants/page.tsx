@@ -5,7 +5,6 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import {
   ArrowLeft,
   Plus,
-  Pencil,
   Trash2,
   Save,
   X,
@@ -14,7 +13,9 @@ import {
   Power,
   KeyRound,
   CheckCircle2,
-  XCircle
+  XCircle,
+  Shield,
+  Sparkles
 } from 'lucide-react';
 import { Restaurant } from '@/types/restaurant';
 
@@ -150,125 +151,154 @@ export default function RestaurantsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-12 h-12 border-4 border-royal-200 border-t-royal-600 rounded-full animate-spin" />
+          <p className="text-sm text-ink-500 font-medium">Cargando restaurantes...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 max-w-6xl">
-      <header className="flex items-center justify-between">
+    <div className="space-y-6">
+      <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-fade-in">
         <div className="flex items-center gap-4">
           <button
             onClick={() => router.push('/superadmin')}
-            className="p-2 hover:bg-slate-200 rounded-full transition-colors"
+            className="p-2 hover:bg-ink-100 rounded-xl transition-colors text-ink-600"
           >
             <ArrowLeft size={20} />
           </button>
           <div>
-            <h1 className="text-3xl font-black text-slate-900 flex items-center gap-3">
-              <Store className="text-purple-500" /> Gestión de Restaurantes
+            <h1 className="text-3xl font-black text-ink-900 flex items-center gap-3 tracking-tight">
+              <span className="p-2 bg-royal-100 text-royal-600 rounded-xl">
+                <Store size={20} />
+              </span>
+              Gestión de Restaurantes
             </h1>
-            <p className="text-slate-500">Crea, suspende o elimina restaurantes de tu plataforma</p>
+            <p className="text-ink-500 mt-1">Crea, suspende o elimina restaurantes de tu plataforma</p>
           </div>
         </div>
         <button
           onClick={() => { setIsCreateOpen(true); setFormData({ name: '', password: '' }); }}
-          className="flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-xl font-bold hover:bg-purple-700 transition-all shadow-lg shadow-purple-200 active:scale-95"
+          className="btn-royal"
         >
           <Plus size={20} /> Crear Restaurante
         </button>
       </header>
 
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-        <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
-          <div className="p-2 bg-white rounded-lg border border-slate-200">
-            <Search size={20} className="text-slate-400" />
+      {/* Search */}
+      <div className="card p-4 animate-fade-in">
+        <div className="flex items-center gap-3 bg-ink-50 p-3 rounded-xl border border-ink-200 focus-within:border-royal-400 focus-within:ring-2 focus-within:ring-royal-100 transition-all">
+          <div className="p-2 bg-white rounded-lg border border-ink-200">
+            <Search size={18} className="text-ink-400" />
           </div>
           <input
             type="text"
             placeholder="Buscar restaurante por nombre..."
-            className="flex-grow bg-transparent outline-none text-sm font-medium"
+            className="flex-grow bg-transparent outline-none text-sm font-medium text-ink-900 placeholder-ink-400"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="p-1 hover:bg-ink-200 rounded-md text-ink-400 hover:text-ink-700"
+            >
+              <X size={16} />
+            </button>
+          )}
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      {/* Table */}
+      <div className="card overflow-hidden animate-slide-up">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="table-clean">
             <thead>
-              <tr className="text-slate-400 text-xs font-bold uppercase tracking-wider border-b border-slate-100 bg-slate-50">
-                <th className="px-6 py-4">Restaurante</th>
-                <th className="px-6 py-4">Estado</th>
-                <th className="px-6 py-4">Creado</th>
-                <th className="px-6 py-4 text-right">Acciones</th>
+              <tr>
+                <th>Restaurante</th>
+                <th>Estado</th>
+                <th>Creado</th>
+                <th className="text-right">Acciones</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-50">
+            <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-6 py-16 text-center text-slate-400 italic">
-                    No se encontraron restaurantes.
+                  <td colSpan={4} className="px-6 py-20 text-center text-ink-400">
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="w-14 h-14 bg-ink-100 rounded-2xl flex items-center justify-center">
+                        <Store size={28} className="opacity-50" />
+                      </div>
+                      <p className="font-semibold italic">No se encontraron restaurantes</p>
+                      {searchQuery && <p className="text-sm">Intenta con otro nombre</p>}
+                    </div>
                   </td>
                 </tr>
               ) : (
-                filtered.map(r => {
+                filtered.map((r, idx) => {
                   const isActive = r.is_active !== false;
                   return (
-                    <tr key={r.id} className="hover:bg-slate-50 transition-colors group">
-                      <td className="px-6 py-4">
+                    <tr
+                      key={r.id}
+                      style={{ animationDelay: `${idx * 40}ms` }}
+                      className="animate-fade-in"
+                    >
+                      <td>
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center font-bold">
+                          <div className="w-11 h-11 bg-gradient-royal text-white rounded-xl flex items-center justify-center font-black text-lg shadow-glow-royal">
                             {r.name.charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <p className="font-bold text-slate-900">{r.name}</p>
-                            <p className="text-xs text-slate-400 font-mono">{r.id.substring(0, 8)}...</p>
+                            <p className="font-bold text-ink-900">{r.name}</p>
+                            <p className="text-xs text-ink-400 font-mono">ID: {r.id.substring(0, 8)}…</p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td>
                         <span
-                          className={`px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1 ${
-                            isActive ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
+                          className={`badge ${
+                            isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
                           }`}
                         >
-                          {isActive ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
+                          <span className={`w-1.5 h-1.5 rounded-full ${
+                            isActive ? 'bg-emerald-500' : 'bg-rose-500'
+                          }`} />
                           {isActive ? 'Activo' : 'Suspendido'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-slate-500">
-                        {new Date(r.created_at).toLocaleDateString()}
+                      <td className="text-ink-600 font-medium">
+                        {new Date(r.created_at).toLocaleDateString('es-CR', {
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
                       </td>
-                      <td className="px-6 py-4 text-right">
+                      <td className="text-right">
                         <div className="flex items-center justify-end gap-1">
-                          <button
+                          <IconButton
                             onClick={() => { setEditingPassword(r); setFormData({ name: r.name, password: '' }); }}
-                            className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                            icon={KeyRound}
+                            hoverColor="hover:text-sky-600 hover:bg-sky-50"
                             title="Cambiar contraseña"
-                          >
-                            <KeyRound size={18} />
-                          </button>
-                          <button
+                          />
+                          <IconButton
                             onClick={() => toggleActive(r)}
-                            className={`p-2 rounded-lg transition-all ${
+                            icon={Power}
+                            hoverColor={
                               isActive
-                                ? 'text-slate-400 hover:text-orange-600 hover:bg-orange-50'
-                                : 'text-slate-400 hover:text-green-600 hover:bg-green-50'
-                            }`}
+                                ? 'hover:text-amber-600 hover:bg-amber-50'
+                                : 'hover:text-emerald-600 hover:bg-emerald-50'
+                            }
                             title={isActive ? 'Suspender' : 'Reactivar'}
-                          >
-                            <Power size={18} />
-                          </button>
-                          <button
+                          />
+                          <IconButton
                             onClick={() => handleDelete(r)}
-                            className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                            icon={Trash2}
+                            hoverColor="hover:text-rose-600 hover:bg-rose-50"
                             title="Eliminar"
-                          >
-                            <Trash2 size={18} />
-                          </button>
+                          />
                         </div>
                       </td>
                     </tr>
@@ -282,101 +312,140 @@ export default function RestaurantsPage() {
 
       {/* Create Modal */}
       {isCreateOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-              <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                <Plus size={20} className="text-purple-600" /> Nuevo Restaurante
-              </h2>
-              <button onClick={() => setIsCreateOpen(false)} className="p-1 hover:bg-slate-200 rounded-full">
-                <X size={20} />
-              </button>
+        <Modal onClose={() => setIsCreateOpen(false)}>
+          <ModalHeader
+            icon={<Plus size={20} className="text-royal-600" />}
+            title="Nuevo Restaurante"
+            onClose={() => setIsCreateOpen(false)}
+          />
+          <div className="p-6 space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-ink-700">Nombre del Restaurante</label>
+              <input
+                type="text"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="input"
+                placeholder="Ej: Restaurante XYZ"
+              />
             </div>
-            <div className="p-6 space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-700">Nombre del Restaurante</label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-purple-500"
-                  placeholder="Ej: Restaurante XYZ"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-700">Contraseña General</label>
-                <input
-                  type="text"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-purple-500"
-                  placeholder="Contraseña que el cliente usará para entrar"
-                />
-                <p className="text-xs text-slate-500">Esta contraseña se la das al dueño del restaurante para que pueda entrar a su panel.</p>
-              </div>
-            </div>
-            <div className="p-6 border-t border-slate-100 flex gap-3">
-              <button
-                onClick={() => setIsCreateOpen(false)}
-                className="flex-1 px-4 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleCreate}
-                className="flex-1 px-4 py-3 bg-purple-600 text-white font-bold rounded-xl hover:bg-purple-700 flex items-center justify-center gap-2"
-              >
-                <Save size={20} /> Crear
-              </button>
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-ink-700">Contraseña General</label>
+              <input
+                type="text"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                className="input"
+                placeholder="Contraseña que el cliente usará para entrar"
+              />
+              <p className="text-xs text-ink-500 flex items-start gap-1.5">
+                <Sparkles size={12} className="mt-0.5 shrink-0 text-royal-500" />
+                Esta contraseña se la das al dueño del restaurante para que pueda entrar a su panel.
+              </p>
             </div>
           </div>
-        </div>
+          <ModalFooter
+            onCancel={() => setIsCreateOpen(false)}
+            onConfirm={handleCreate}
+            confirmLabel="Crear"
+            confirmIcon={Save}
+            variant="royal"
+          />
+        </Modal>
       )}
 
       {/* Edit Password Modal */}
       {editingPassword && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-              <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                <KeyRound size={20} className="text-blue-600" /> Cambiar Contraseña
-              </h2>
-              <button onClick={() => setEditingPassword(null)} className="p-1 hover:bg-slate-200 rounded-full">
-                <X size={20} />
-              </button>
+        <Modal onClose={() => setEditingPassword(null)}>
+          <ModalHeader
+            icon={<KeyRound size={20} className="text-sky-600" />}
+            title="Cambiar Contraseña"
+            onClose={() => setEditingPassword(null)}
+          />
+          <div className="p-6 space-y-4">
+            <div className="p-3 bg-sky-50 border border-sky-100 rounded-xl text-sm text-sky-900">
+              Cambiar contraseña para: <strong>{editingPassword.name}</strong>
             </div>
-            <div className="p-6 space-y-4">
-              <p className="text-sm text-slate-600">
-                Cambiar contraseña para: <strong>{editingPassword.name}</strong>
-              </p>
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-700">Nueva Contraseña</label>
-                <input
-                  type="text"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Nueva contraseña"
-                />
-              </div>
-            </div>
-            <div className="p-6 border-t border-slate-100 flex gap-3">
-              <button
-                onClick={() => setEditingPassword(null)}
-                className="flex-1 px-4 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleUpdatePassword}
-                className="flex-1 px-4 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 flex items-center justify-center gap-2"
-              >
-                <Save size={20} /> Actualizar
-              </button>
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-ink-700">Nueva Contraseña</label>
+              <input
+                type="text"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                className="input"
+                placeholder="Nueva contraseña"
+                autoFocus
+              />
             </div>
           </div>
-        </div>
+          <ModalFooter
+            onCancel={() => setEditingPassword(null)}
+            onConfirm={handleUpdatePassword}
+            confirmLabel="Actualizar"
+            confirmIcon={Save}
+            variant="primary"
+          />
+        </Modal>
       )}
+    </div>
+  );
+}
+
+// === Helper components ===
+
+function IconButton({ onClick, icon: Icon, hoverColor, title }: any) {
+  return (
+    <button
+      onClick={onClick}
+      className={`p-2 text-ink-400 ${hoverColor} rounded-lg transition-all active:scale-90`}
+      title={title}
+    >
+      <Icon size={18} />
+    </button>
+  );
+}
+
+function Modal({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-900/60 backdrop-blur-sm animate-fade-in"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-scale-in"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function ModalHeader({ icon, title, onClose }: { icon: React.ReactNode; title: string; onClose: () => void }) {
+  return (
+    <div className="p-5 border-b border-ink-100 flex items-center justify-between bg-ink-50/50">
+      <h2 className="text-lg font-black text-ink-900 flex items-center gap-2">
+        {icon} {title}
+      </h2>
+      <button onClick={onClose} className="p-1.5 hover:bg-ink-200 rounded-lg transition-colors text-ink-500">
+        <X size={18} />
+      </button>
+    </div>
+  );
+}
+
+function ModalFooter({ onCancel, onConfirm, confirmLabel, confirmIcon: Icon, variant }: any) {
+  return (
+    <div className="p-5 border-t border-ink-100 flex gap-3 bg-ink-50/30">
+      <button onClick={onCancel} className="btn-secondary flex-1">
+        Cancelar
+      </button>
+      <button
+        onClick={onConfirm}
+        className={`flex-1 ${variant === 'royal' ? 'btn-royal' : 'btn-primary'}`}
+      >
+        <Icon size={18} /> {confirmLabel}
+      </button>
     </div>
   );
 }

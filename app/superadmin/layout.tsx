@@ -1,8 +1,7 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { LayoutDashboard, Store, LogOut, Shield } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { LayoutDashboard, Store, LogOut, Shield, Sparkles } from 'lucide-react';
 
 export default function SuperadminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -28,8 +27,11 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+      <div className="min-h-screen flex items-center justify-center bg-ink-50">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-12 h-12 border-4 border-royal-200 border-t-royal-600 rounded-full animate-spin" />
+          <p className="text-sm text-ink-500 font-medium">Cargando panel...</p>
+        </div>
       </div>
     );
   }
@@ -38,63 +40,76 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
     {
       name: 'Dashboard',
       path: '/superadmin',
-      icon: <LayoutDashboard size={20} />,
+      icon: LayoutDashboard,
     },
     {
       name: 'Restaurantes',
       path: '/superadmin/restaurants',
-      icon: <Store size={20} />,
+      icon: Store,
     },
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
-      {/* Sidebar */}
-      <aside className="w-64 bg-slate-900 text-white p-6 flex flex-col space-y-8">
-        <div className="flex items-center gap-3 px-2">
-          <div className="p-2 bg-purple-500 rounded-lg">
-            <Shield size={24} />
+    <div className="min-h-screen flex bg-ink-50">
+      {/* === SIDEBAR === */}
+      <aside className="w-64 bg-gradient-to-b from-royal-700 via-royal-800 to-royal-900 text-white p-5 flex flex-col gap-6 hidden lg:flex sticky top-0 h-screen overflow-hidden">
+        {/* Decorative shapes */}
+        <div className="absolute top-0 right-0 w-40 h-40 bg-royal-400/30 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-40 h-40 bg-brand-500/20 rounded-full blur-3xl" />
+
+        <div className="relative flex items-center gap-3 px-2 pt-2">
+          <div className="p-2.5 bg-white/10 backdrop-blur-md rounded-xl border border-white/20 shadow-glow-royal">
+            <Shield size={22} />
           </div>
-          <span className="font-bold text-xl">Superadmin</span>
+          <div>
+            <span className="font-black text-lg tracking-tight block">Superadmin</span>
+            <span className="text-[10px] text-white/50 uppercase tracking-wider flex items-center gap-1">
+              <Sparkles size={10} /> Plataforma SaaS
+            </span>
+          </div>
         </div>
 
-        <nav className="flex-grow space-y-2">
+        <nav className="relative flex-grow space-y-1 overflow-y-auto">
+          <p className="text-[10px] text-white/40 uppercase font-bold tracking-wider px-3 mb-2">
+            Navegación
+          </p>
           {navItems.map(item => {
+            const Icon = item.icon;
             const isActive = pathname === item.path;
             return (
               <button
                 key={item.path}
                 onClick={() => router.push(item.path)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors group ${
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group ${
                   isActive
-                    ? 'bg-purple-600 text-white'
-                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                    ? 'bg-white text-royal-700 shadow-lg'
+                    : 'text-white/70 hover:bg-white/10 hover:text-white'
                 }`}
               >
-                <span className="group-hover:scale-110 transition-transform">{item.icon}</span>
-                <span className="font-medium">{item.name}</span>
+                <Icon size={18} className="group-hover:scale-110 transition-transform" />
+                <span className="text-sm font-semibold">{item.name}</span>
               </button>
             );
           })}
         </nav>
 
-        <div className="space-y-2">
-          <div className="px-4 py-3 bg-slate-800 rounded-xl">
-            <p className="text-xs text-slate-400">Sesión activa</p>
-            <p className="text-sm font-medium truncate">{email}</p>
+        <div className="relative space-y-2 pt-3 border-t border-white/10">
+          <div className="px-3 py-3 bg-white/5 backdrop-blur-md rounded-xl border border-white/10">
+            <p className="text-[10px] text-white/50 uppercase tracking-wider font-bold">Sesión activa</p>
+            <p className="text-sm font-medium truncate mt-0.5">{email}</p>
           </div>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/80 hover:text-white hover:bg-white/10 transition-colors"
           >
-            <LogOut size={20} />
-            <span className="font-medium">Cerrar Sesión</span>
+            <LogOut size={18} />
+            <span className="text-sm font-semibold">Cerrar sesión</span>
           </button>
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-grow p-8 overflow-y-auto">
+      {/* === MAIN === */}
+      <main className="flex-grow p-6 lg:p-10 overflow-y-auto max-w-7xl mx-auto w-full">
         {children}
       </main>
     </div>

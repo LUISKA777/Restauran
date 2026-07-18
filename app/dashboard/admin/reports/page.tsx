@@ -138,122 +138,120 @@ export default function ReportsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-slate-500 font-medium">Cargando analíticas...</p>
+      <div className="min-h-screen flex items-center justify-center bg-ink-50">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-12 h-12 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin" />
+          <p className="text-sm text-ink-500 font-medium">Cargando analíticas...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="flex items-center justify-between mb-8">
+    <div className="min-h-screen p-6 lg:p-10 max-w-7xl mx-auto">
+      <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8 animate-fade-in">
         <div className="flex items-center gap-4">
           <button
             onClick={() => router.back()}
-            className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+            className="p-2 hover:bg-ink-100 rounded-xl transition-colors text-ink-600"
           >
             <ArrowLeft size={20} />
           </button>
-          <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
-            <BarChart3 className="text-green-500" /> Reportes y Ventas
-          </h1>
+          <div>
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold mb-2">
+              <BarChart3 size={12} /> Analítica
+            </div>
+            <h1 className="text-3xl font-black text-ink-900 tracking-tight">Reportes y Ventas</h1>
+            <p className="text-ink-500 mt-1">Analiza el rendimiento de tu restaurante</p>
+          </div>
         </div>
-        <div className="flex items-center gap-2 bg-white p-1 rounded-2xl border shadow-sm">
-          <button
-            onClick={() => setRange('today')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${range === 'today' ? 'bg-green-600 text-white shadow-md' : 'text-slate-500 hover:bg-gray-100'}`}
-          >
-            Hoy
-          </button>
-          <button
-            onClick={() => setRange('week')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${range === 'week' ? 'bg-green-600 text-white shadow-md' : 'text-slate-500 hover:bg-gray-100'}`}
-          >
-            Semana
-          </button>
-          <button
-            onClick={() => setRange('month')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${range === 'month' ? 'bg-green-600 text-white shadow-md' : 'text-slate-500 hover:bg-gray-100'}`}
-          >
-            Mes
-          </button>
-          <button
-            onClick={() => setRange('all')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${range === 'all' ? 'bg-green-600 text-white shadow-md' : 'text-slate-500 hover:bg-gray-100'}`}
-          >
-            Todo
-          </button>
+        <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-ink-200 shadow-soft">
+          {(['today', 'week', 'month', 'all'] as const).map(r => (
+            <button
+              key={r}
+              onClick={() => setRange(r)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                range === r ? 'bg-emerald-600 text-white shadow-md' : 'text-ink-500 hover:bg-ink-100'
+              }`}
+            >
+              {r === 'today' ? 'Hoy' : r === 'week' ? 'Semana' : r === 'month' ? 'Mes' : 'Todo'}
+            </button>
+          ))}
         </div>
-      </div>
+      </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard
           title="Ingresos Totales"
           value={`₡${totalRevenue.toLocaleString()}`}
-          icon={<DollarSign />}
-          color="text-green-600"
-          bg="bg-green-100"
+          icon={DollarSign}
+          color="text-emerald-600"
+          bg="bg-emerald-100"
+          delay={0}
         />
         <StatCard
           title="Pedidos"
           value={totalCount.toString()}
-          icon={<ShoppingBag />}
-          color="text-blue-600"
-          bg="bg-blue-100"
+          icon={ShoppingBag}
+          color="text-sky-600"
+          bg="bg-sky-100"
+          delay={100}
         />
         <StatCard
           title="Producto Estrella"
           value={topProduct}
-          icon={<TrendingUp />}
-          color="text-orange-600"
-          bg="bg-orange-100"
+          icon={TrendingUp}
+          color="text-brand-600"
+          bg="bg-brand-100"
+          delay={200}
         />
         <StatCard
           title="Ticket Promedio"
           value={`₡${Math.round(avgOrder).toLocaleString()}`}
-          icon={<Clock />}
-          color="text-purple-600"
-          bg="bg-purple-100"
+          icon={Clock}
+          color="text-royal-600"
+          bg="bg-royal-100"
+          delay={300}
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Daily Breakdown */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-              <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                <Calendar size={20} className="text-green-600" /> Ventas por Día
+        <div className="lg:col-span-2 space-y-4">
+          <div className="card overflow-hidden animate-slide-up">
+            <div className="p-5 border-b border-ink-100 flex justify-between items-center">
+              <h2 className="text-lg font-black text-ink-900 flex items-center gap-2">
+                <span className="p-1.5 bg-emerald-100 text-emerald-600 rounded-lg">
+                  <Calendar size={16} />
+                </span>
+                Ventas por Día
               </h2>
-              <button className="text-xs font-bold text-slate-400 hover:text-green-600 flex items-center gap-1 transition-colors">
+              <button className="text-xs font-bold text-ink-400 hover:text-emerald-600 flex items-center gap-1 transition-colors">
                 <Download size={14} /> Exportar CSV
               </button>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead className="bg-slate-50 border-b border-slate-200">
-                  <tr className="text-slate-600">
-                    <th className="px-6 py-4 text-sm font-bold">Fecha</th>
-                    <th className="px-6 py-4 text-sm font-bold text-center">Pedidos</th>
-                    <th className="px-6 py-4 text-sm font-bold text-right">Total Ventas</th>
+              <table className="table-clean">
+                <thead>
+                  <tr>
+                    <th>Fecha</th>
+                    <th className="text-center">Pedidos</th>
+                    <th className="text-right">Total Ventas</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody>
                   {dailySales.length === 0 ? (
                     <tr>
-                      <td colSpan={3} className="px-6 py-20 text-center text-slate-400 italic">
+                      <td colSpan={3} className="px-6 py-20 text-center text-ink-400 italic">
                         No hay datos de ventas para el periodo seleccionado.
                       </td>
                     </tr>
                   ) : (
                     dailySales.map((day, i) => (
-                      <tr key={i} className="hover:bg-slate-50 transition-colors">
-                        <td className="px-6 py-4 font-medium text-slate-900">{day.date}</td>
-                        <td className="px-6 py-4 text-center text-slate-600 font-bold">{day.count}</td>
-                        <td className="px-6 py-4 text-right font-black text-slate-900">₡{day.revenue.toLocaleString()}</td>
+                      <tr key={i}>
+                        <td className="font-medium text-ink-900">{day.date}</td>
+                        <td className="text-center text-ink-600 font-bold">{day.count}</td>
+                        <td className="text-right font-black text-ink-900">₡{day.revenue.toLocaleString()}</td>
                       </tr>
                     ))
                   )}
@@ -264,27 +262,30 @@ export default function ReportsPage() {
         </div>
 
         {/* Recent Orders List */}
-        <div className="space-y-6">
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
-            <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-              <ShoppingBag size={20} className="text-green-600" /> Últimos Pedidos
+        <div className="space-y-4">
+          <div className="card p-5 animate-slide-up" style={{ animationDelay: '150ms' }}>
+            <h2 className="text-lg font-black text-ink-900 mb-4 flex items-center gap-2">
+              <span className="p-1.5 bg-sky-100 text-sky-600 rounded-lg">
+                <ShoppingBag size={16} />
+              </span>
+              Últimos Pedidos
             </h2>
-            <div className="space-y-4">
+            <div className="space-y-2">
               {orders.slice(0, 5).map(order => (
-                <div key={order.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex justify-between items-center group hover:border-green-200 transition-colors">
-                  <div>
-                    <p className="text-sm font-bold text-slate-900">{order.customer_name || 'Anónimo'}</p>
-                    <p className="text-xs text-slate-400">{new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} la hora</p>
+                <div key={order.id} className="p-3 bg-ink-50/50 rounded-xl border border-ink-100 flex justify-between items-center hover:border-emerald-200 transition-colors">
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-ink-900 truncate">{order.customer_name || 'Anónimo'}</p>
+                    <p className="text-xs text-ink-400">{new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-black text-slate-900">₡{order.total_price.toLocaleString()}</p>
-                    <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-slate-200 text-slate-500">
-                      {order.status}
-                    </span>
+                  <div className="text-right shrink-0 ml-2">
+                    <p className="text-sm font-black text-ink-900">₡{order.total_price.toLocaleString()}</p>
+                    <span className="badge bg-ink-200 text-ink-600">{order.status}</span>
                   </div>
                 </div>
               ))}
-              {orders.length === 0 && <p className="text-center text-slate-400 italic text-sm py-4">Sin pedidos recientes</p>}
+              {orders.length === 0 && (
+                <p className="text-center text-ink-400 italic text-sm py-6">Sin pedidos recientes</p>
+              )}
             </div>
           </div>
         </div>
@@ -293,18 +294,19 @@ export default function ReportsPage() {
   );
 }
 
-function StatCard({ title, value, icon, color, bg }: any) {
+function StatCard({ title, value, icon: Icon, color, bg, delay = 0 }: any) {
   return (
-    <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col space-y-4">
-      <div className="flex justify-between items-start">
-        <span className="text-slate-500 font-medium">{title}</span>
-        <div className={`p-2 rounded-lg ${bg} ${color}`}>
-          {icon}
+    <div
+      style={{ animationDelay: `${delay}ms` }}
+      className="card-hover p-5 animate-slide-up opacity-0"
+    >
+      <div className="flex justify-between items-start mb-3">
+        <span className="text-sm font-semibold text-ink-500">{title}</span>
+        <div className={`p-2 rounded-xl ${bg}`}>
+          <Icon size={18} className={color} />
         </div>
       </div>
-      <div>
-        <p className="text-2xl font-black text-slate-900">{value}</p>
-      </div>
+      <p className="text-2xl font-black text-ink-900 tracking-tight truncate">{value}</p>
     </div>
   );
 }
