@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { useRouter } from 'next/navigation';
 import { Plus, ShoppingBag, User, Users, Table, Send, RotateCcw, X, Package, Bell, CheckCircle2, Receipt } from 'lucide-react';
 import { Order } from '@/types/order';
@@ -139,7 +140,7 @@ export default function WaiterPanel() {
   async function markAsDelivered(orderId: string, isImmediate = false) {
     if (isImmediate) {
       // Only mark quick delivery items as delivered
-      const { data: order } = await supabase
+      const { data: order } = await supabaseAdmin
         .from('orders')
         .select('order_items(id, products(quick_delivery))')
         .eq('id', orderId)
@@ -150,16 +151,19 @@ export default function WaiterPanel() {
         .map((item: any) => item.id);
 
       if (itemsToMark && itemsToMark.length > 0) {
-        const { error } = await supabase
+        const { error } = await supabaseAdmin
           .from('order_items')
           .update({ delivered: true })
           .in('id', itemsToMark);
 
-        if (error) alert('Error al marcar productos rápidos como entregados');
+        if (error) {
+          console.error('[markAsDelivered - quick] error:', error);
+          alert(`Error al marcar productos rápidos como entregados: ${error.message}`);
+        }
       }
     } else {
       // Mark entire order as delivered
-      const { error } = await supabase
+      const { error } = await supabaseAdmin
         .from('orders')
         .update({
           status: 'delivered',
@@ -167,7 +171,10 @@ export default function WaiterPanel() {
         })
         .eq('id', orderId);
 
-      if (error) alert('Error al marcar como entregado');
+      if (error) {
+        console.error('[markAsDelivered] error:', error);
+        alert(`Error al marcar como entregado: ${error.message}`);
+      }
     }
 
     fetchReadyOrders();
@@ -235,7 +242,7 @@ export default function WaiterPanel() {
           orderId = active.id;
           const newTotal = (active.total_price || 0) + total;
 
-          const { error: updateError } = await supabase
+          const { error: updateError } = await supabaseAdmin
             .from('orders')
             .update({
               total_price: newTotal,
@@ -250,7 +257,7 @@ export default function WaiterPanel() {
           }
         } else {
           // No active order, create new one
-          const { data: newOrder, error: newOrderError } = await supabase
+          const { data: newOrder, error: newOrderError } = await supabaseAdmin
             .from('orders')
             .insert({
               restaurant_id: restaurantId,
@@ -272,7 +279,7 @@ export default function WaiterPanel() {
         }
       } else {
         // Takeaway always creates a new order
-        const { data: newOrder, error: newOrderError } = await supabase
+        const { data: newOrder, error: newOrderError } = await supabaseAdmin
           .from('orders')
           .insert({
             restaurant_id: restaurantId,
@@ -300,7 +307,7 @@ export default function WaiterPanel() {
         notes: item.notes
       }));
 
-      const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
+      const { error: itemsError } = await supabaseAdmin.from('order_items').insert(orderItems);
 
       if (itemsError) {
         alert('Error al agregar productos al pedido');

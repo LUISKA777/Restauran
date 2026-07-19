@@ -12,6 +12,7 @@ import {
   LayoutGrid
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
 interface RestaurantTable {
   id: string;
@@ -78,20 +79,25 @@ export default function TablesPage() {
     const restaurantId = localStorage.getItem('restaurant_id');
     if (!restaurantId) return;
 
+    const num = parseInt(formData.table_number);
+    if (Number.isNaN(num) || num < 1) {
+      alert('Número de mesa inválido.');
+      return;
+    }
     const payload = {
-      table_number: parseInt(formData.table_number),
+      table_number: num,
       restaurant_id: restaurantId,
     };
 
     try {
       if (editingTable) {
-        const { error } = await supabase
+        const { error } = await supabaseAdmin
           .from('restaurant_tables')
           .update(payload)
           .eq('id', editingTable.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase
+        const { error } = await supabaseAdmin
           .from('restaurant_tables')
           .insert([payload]);
         if (error) throw error;
@@ -99,27 +105,26 @@ export default function TablesPage() {
 
       await fetchTables();
       setIsModalOpen(false);
-    } catch (err) {
-      console.error('Error saving table:', err);
-      alert('Error al guardar la mesa. Verifica que el número no esté duplicado.');
+    } catch (err: any) {
+      console.error('[handleSaveTable] error:', err);
+      alert(`Error al guardar la mesa: ${err?.message || 'verifica que el número no esté duplicado.'}`);
     }
   }
 
   async function handleDeleteTable(id: string) {
     if (!confirm('¿Estás seguro de que deseas eliminar esta mesa?')) return;
 
-    try {
-      const { error } = await supabase
-        .from('restaurant_tables')
-        .delete()
-        .eq('id', id);
+    const { error } = await supabaseAdmin
+      .from('restaurant_tables')
+      .delete()
+      .eq('id', id);
 
-      if (error) throw error;
-      await fetchTables();
-    } catch (err) {
-      console.error('Error deleting table:', err);
-      alert('Error al eliminar la mesa');
+    if (error) {
+      console.error('[handleDeleteTable] error:', error);
+      alert(`Error al eliminar: ${error.message}`);
+      return;
     }
+    await fetchTables();
   }
 
   if (loading) {

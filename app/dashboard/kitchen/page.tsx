@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { Clock, CheckCircle, Flame, Package, Truck, RotateCcw, Users, UtensilsCrossed, XCircle, Banknote, Bell } from 'lucide-react';
 import { Order, OrderStatus } from '@/types/order';
 
@@ -60,10 +61,15 @@ export default function KitchenBoard() {
   }
 
   async function updateStatus(orderId: string, newStatus: OrderStatus) {
-    await supabase
+    const { error } = await supabaseAdmin
       .from('orders')
       .update({ status: newStatus, updated_at: new Date().toISOString() })
       .eq('id', orderId);
+
+    if (error) {
+      console.error('[updateStatus] error:', error);
+      alert(`Error al actualizar el estado: ${error.message}`);
+    }
 
     fetchOrders();
   }

@@ -16,10 +16,10 @@ import {
   Image as ImageIcon,
   DollarSign,
   Tag,
-  LayoutList,
   Zap
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
 interface Product {
   id: string;
@@ -30,8 +30,28 @@ interface Product {
   image_url: string;
   is_available: boolean;
   quick_delivery: boolean;
-  sort_order?: number;
+  // sort_order: number;  ← NO existe en la tabla products, lo omitimos
 }
+
+interface ProductFormData {
+  name: string;
+  description: string;
+  price: string;
+  category: string;
+  image_url: string;
+  is_available: boolean;
+  quick_delivery: boolean;
+}
+
+const EMPTY_FORM: ProductFormData = {
+  name: '',
+  description: '',
+  price: '',
+  category: 'General',
+  image_url: '',
+  is_available: true,
+  quick_delivery: false,
+};
 
 export default function AdminMenuPage() {
   const router = useRouter();
@@ -42,18 +62,7 @@ export default function AdminMenuPage() {
   const [filterCategory, setFilterCategory] = useState('All');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-
-  // Form state
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    price: '',
-    category: '',
-    image_url: '',
-    is_available: true,
-    quick_delivery: false,
-    sort_order: '0'
-  });
+  const [formData, setFormData] = useState<ProductFormData>(EMPTY_FORM);
 
   useEffect(() => {
     fetchProducts();
@@ -63,17 +72,18 @@ export default function AdminMenuPage() {
     setLoading(true);
     const restaurantId = localStorage.getItem('restaurant_id');
     if (!restaurantId) {
-      console.error("No restaurant ID found in localStorage");
+      console.error('[fetchProducts] No restaurant ID in localStorage');
       setLoading(false);
       return;
     }
 
+    // SELECT puede usar anon (RLS permite leer productos disponibles).
+    // Si quisiéramos ver no-disponibles también, habría que usar admin.
     const [productsRes, settingsRes] = await Promise.all([
       supabase
         .from('products')
         .select('*')
-        .eq('restaurant_id', restaurantId)
-        .order('sort_order', { ascending: true }),
+        .eq('restaurant_id', restaurantId),
       supabase
         .from('restaurants')
         .select('settings')
@@ -82,9 +92,18 @@ export default function AdminMenuPage() {
     ]);
 
     if (productsRes.error) {
-      console.error('Error fetching products:', productsRes.error);
+      console.error('[fetchProducts] products error:', productsRes.error);
+      alert(`Error al cargar productos: ${productsRes.error.message}`);
     } else {
-      setProducts(productsRes.data || []);
+      // Ordenar por created_at desc en cliente (la columna sort_order no existe
+      // todavía en la tabla products). Cuando se agregue, podemos volver a
+      // ordenar en el servidor.
+      const sorted = (productsRes.data || []).slice().sort((a: any, b: any) => {
+        const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return bTime - aTime;
+      });
+      setProducts(sorted);
     }
 
     if (settingsRes.data?.settings?.categories) {
@@ -105,62 +124,68 @@ export default function AdminMenuPage() {
         image_url: product.image_url || '',
         is_available: product.is_available,
         quick_delivery: product.quick_delivery || false,
-        sort_order: (product.sort_order || 0).toString()
       });
     } else {
       setEditingProduct(null);
       setFormData({
-        name: '',
-        description: '',
-        price: '',
+        ...EMPTY_FORM,
         category: categoriesList[0] || 'General',
-        image_url: '',
-        is_available: true,
-        quick_delivery: false,
-        sort_order: '0'
       });
     }
     setIsModalOpen(true);
   };
 
   async function toggleAvailability(product: Product) {
-    try {
-      const { error } = await supabase
-        .from('products')
-        .update({ is_available: !product.is_available })
-        .eq('id', product.id);
-      if (error) throw error;
-      await fetchProducts();
-    } catch (err) {
-      console.error('Error toggling availability:', err);
+    const { error } = await supabaseAdmin
+      .from('products')
+      .update({ is_available: !product.is_available })
+      .eq('id', product.id);
+
+    if (error) {
+      console.error('[toggleAvailability] error:', error);
+      alert(`Error: ${error.message}`);
+      return;
     }
+    await fetchProducts();
   }
 
   async function handleSaveProduct() {
     const restaurantId = localStorage.getItem('restaurant_id');
-    if (!restaurantId) return;
+    if (!restaurantId) {
+      alert('No hay sesión activa. Vuelve a iniciar sesión.');
+      return;
+    }
+
+    if (!formData.name.trim()) {
+      alert('El nombre del producto es obligatorio.');
+      return;
+    }
+    const priceNum = parseFloat(formData.price);
+    if (Number.isNaN(priceNum) || priceNum < 0) {
+      alert('El precio debe ser un número válido.');
+      return;
+    }
 
     const payload = {
-      name: formData.name,
-      description: formData.description,
-      price: parseFloat(formData.price),
-      category: formData.category,
-      image_url: formData.image_url,
+      name: formData.name.trim(),
+      description: formData.description.trim(),
+      price: priceNum,
+      category: formData.category.trim() || 'General',
+      image_url: formData.image_url.trim(),
       is_available: formData.is_available,
       quick_delivery: formData.quick_delivery,
-      sort_order: parseInt(formData.sort_order) || 0,
-      restaurant_id: restaurantId
+      restaurant_id: restaurantId,
     };
 
     try {
       if (editingProduct) {
-        const { error } = await supabase
+        const { error } = await supabaseAdmin
           .from('products')
           .update(payload)
           .eq('id', editingProduct.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase
+        const { error } = await supabaseAdmin
           .from('products')
           .insert([payload]);
         if (error) throw error;
@@ -168,27 +193,26 @@ export default function AdminMenuPage() {
 
       await fetchProducts();
       setIsModalOpen(false);
-    } catch (err) {
-      console.error('Error saving product:', err);
-      alert('Error al guardar el producto');
+    } catch (err: any) {
+      console.error('[handleSaveProduct] error:', err);
+      alert(`Error al guardar: ${err?.message || 'Error desconocido'}\n\nCódigo: ${err?.code || 'N/A'}`);
     }
   }
 
   async function handleDeleteProduct(id: string) {
     if (!confirm('¿Estás seguro de que deseas eliminar este producto?')) return;
 
-    try {
-      const { error } = await supabase
-        .from('products')
-        .delete()
-        .eq('id', id);
+    const { error } = await supabaseAdmin
+      .from('products')
+      .delete()
+      .eq('id', id);
 
-      if (error) throw error;
-      await fetchProducts();
-    } catch (err) {
-      console.error('Error deleting product:', err);
-      alert('Error al eliminar el producto');
+    if (error) {
+      console.error('[handleDeleteProduct] error:', error);
+      alert(`Error al eliminar: ${error.message}`);
+      return;
     }
+    await fetchProducts();
   }
 
   const categories = React.useMemo(() => {
@@ -295,8 +319,8 @@ export default function AdminMenuPage() {
               <div className="w-16 h-16 bg-ink-100 rounded-2xl flex items-center justify-center mx-auto">
                 <Package size={28} className="text-ink-400" />
               </div>
-              <h3 className="text-xl font-bold text-ink-900">No se encontraron productos</h3>
-              <p className="text-ink-500">Intenta ajustar los filtros o agrega un nuevo producto al menú.</p>
+              <h3 className="text-xl font-bold text-ink-900">No hay productos</h3>
+              <p className="text-ink-500">Empieza agregando tu primer producto al menú.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -383,7 +407,7 @@ export default function AdminMenuPage() {
             <div className="p-6 space-y-4 overflow-y-auto flex-1">
               <div className="space-y-2">
                 <label className="text-sm font-bold text-ink-700 flex items-center gap-2">
-                  <Package size={14} /> Nombre del Plato
+                  <Package size={14} /> Nombre del Plato *
                 </label>
                 <input
                   type="text"
@@ -413,7 +437,7 @@ export default function AdminMenuPage() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-ink-700 flex items-center gap-2">
-                    <DollarSign size={14} /> Precio (₡)
+                    <DollarSign size={14} /> Precio (₡) *
                   </label>
                   <input
                     type="number"
@@ -424,20 +448,6 @@ export default function AdminMenuPage() {
                     placeholder="0.00"
                   />
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-ink-700 flex items-center gap-2">
-                  <LayoutList size={14} /> Orden en el Menú
-                </label>
-                <input
-                  type="number"
-                  value={formData.sort_order}
-                  onChange={(e) => setFormData({ ...formData, sort_order: e.target.value })}
-                  className="input"
-                  placeholder="0"
-                />
-                <p className="text-[10px] text-ink-500">Los platos con números menores aparecen primero.</p>
               </div>
 
               <div className="space-y-2">

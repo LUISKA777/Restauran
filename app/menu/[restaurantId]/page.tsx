@@ -58,11 +58,15 @@ export default async function MenuPage({ params, searchParams }: { params: Promi
   }
 
   // 3. Get all products for this restaurant
+  // Nota: la columna `sort_order` aún no existe en la tabla products. Cuando
+  // se agregue (ALTER TABLE products ADD COLUMN sort_order INTEGER),
+  // restaurar el .order('sort_order', { ascending: true }) y quitar el
+  // fallback en cliente. Mientras tanto, ordenamos por created_at desc.
   const { data: products, error: productsError } = await supabase
     .from('products')
     .select('*')
     .eq('restaurant_id', restaurantId)
-    .order('sort_order', { ascending: true });
+    .order('created_at', { ascending: false });
 
   if (productsError) {
     return (

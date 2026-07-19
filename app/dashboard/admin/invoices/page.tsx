@@ -13,6 +13,7 @@ import {
   X
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
 interface Order {
   id: string;
@@ -63,29 +64,27 @@ export default function InvoicesPage() {
   async function processPayment() {
     if (!selectedOrder) return;
 
-    try {
-      const { error } = await supabase
-        .from('orders')
-        .update({
-          is_paid: true,
-          payment_method: paymentMethod,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', selectedOrder.id);
+    const { error } = await supabaseAdmin
+      .from('orders')
+      .update({
+        is_paid: true,
+        payment_method: paymentMethod,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', selectedOrder.id);
 
-
-      if (error) throw error;
-
-      alert('Pago procesado con éxito');
-      setIsPaymentModalOpen(false);
-      setSelectedOrder(null);
-      setCashReceived('');
-      setSinpeId('');
-      fetchInvoices();
-    } catch (err) {
-      console.error('Error processing payment:', err);
-      alert('Error al procesar el pago');
+    if (error) {
+      console.error('[processPayment] error:', error);
+      alert(`Error al procesar el pago: ${error.message}`);
+      return;
     }
+
+    alert('Pago procesado con éxito');
+    setIsPaymentModalOpen(false);
+    setSelectedOrder(null);
+    setCashReceived('');
+    setSinpeId('');
+    fetchInvoices();
   }
 
   const filteredOrders = orders.filter(o =>
