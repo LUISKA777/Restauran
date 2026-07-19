@@ -18,6 +18,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -85,8 +86,10 @@ export default function AdminDashboard() {
       if (!restaurantId) return;
 
       try {
+        // Usamos supabaseAdmin (service_role) porque `orders` y
+        // `order_items` no tienen policy de SELECT para anon.
         // 1. Total Revenue (Fallback calculation using order_items)
-        const { data: orderDetails, error: odError } = await supabase
+        const { data: orderDetails, error: odError } = await supabaseAdmin
           .from('order_items')
           .select('quantity, products(price), orders(restaurant_id, status)')
           .eq('orders.restaurant_id', restaurantId)
@@ -100,7 +103,7 @@ export default function AdminDashboard() {
           return acc + (price * item.quantity);
         }, 0);
 
-        const active = (await supabase
+        const active = (await supabaseAdmin
           .from('orders')
           .select('id')
           .eq('restaurant_id', restaurantId)
@@ -109,7 +112,7 @@ export default function AdminDashboard() {
         ).data?.length || 0;
 
         // 2. Top Product
-        const { data: orderItems, error: oiError } = await supabase
+        const { data: orderItems, error: oiError } = await supabaseAdmin
           .from('order_items')
           .select('product_id, products(name), orders(restaurant_id)')
           .eq('orders.restaurant_id', restaurantId);

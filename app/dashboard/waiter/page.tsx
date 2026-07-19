@@ -122,7 +122,8 @@ export default function WaiterPanel() {
     const restaurantId = localStorage.getItem('restaurant_id');
     if (!restaurantId) return;
 
-    const { data, error } = await supabase
+    // service_role: la tabla `orders` no tiene policy SELECT para anon
+    const { data, error } = await supabaseAdmin
       .from('orders')
       .select(`*, restaurant_tables(table_number), order_items(product_id, products(name, description), quantity)`)
       .eq('restaurant_id', restaurantId)
@@ -137,7 +138,8 @@ export default function WaiterPanel() {
     const restaurantId = localStorage.getItem('restaurant_id');
     if (!restaurantId) return;
 
-    const { data, error } = await supabase
+    // service_role: la tabla `orders` no tiene policy SELECT para anon
+    const { data, error } = await supabaseAdmin
       .from('orders')
       .select(`*, restaurant_tables(table_number), order_items(id, product_id, products(name, description, quick_delivery), quantity, delivered)`)
       .eq('restaurant_id', restaurantId)
@@ -245,7 +247,8 @@ export default function WaiterPanel() {
 
       if (!isTakeaway && selectedTable) {
         // Check if there's an active order for this table
-        const { data: activeOrder, error: activeError } = await supabase
+        // service_role: la tabla `orders` no tiene policy SELECT para anon
+        const { data: activeOrder, error: activeError } = await supabaseAdmin
           .from('orders')
           .select('id, total_price')
           .eq('restaurant_id', restaurantId)

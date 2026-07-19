@@ -69,7 +69,9 @@ export default function InvoicesPage() {
     // La tabla `orders` no tiene columna `is_paid`. Una factura pendiente
     // es una orden con status='delivered' y payment_method IS NULL.
     // (Las pagadas tienen payment_method = 'Cash' | 'SINPE' | 'Card'.)
-    const { data, error } = await supabase
+    // Usamos supabaseAdmin (service_role) porque la tabla `orders` no
+    // tiene policy de SELECT para anon.
+    const { data, error } = await supabaseAdmin
       .from('orders')
       .select(`*, restaurant_tables(table_number), order_items(product_id, quantity, products(name, price))`)
       .eq('restaurant_id', restaurantId)

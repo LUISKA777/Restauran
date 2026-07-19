@@ -13,6 +13,7 @@ import {
   Download
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
 interface Order {
   id: string;
@@ -58,7 +59,8 @@ export default function ReportsPage() {
       }
 
       // 1. Fetch Orders with their total_price
-      let query = supabase
+      // service_role: orders y order_items no tienen SELECT para anon
+      let query = supabaseAdmin
         .from('orders')
         .select('id, status, created_at, customer_name, total_price')
         .eq('restaurant_id', restaurantId)
@@ -75,7 +77,7 @@ export default function ReportsPage() {
 
       // 2. Fetch Top Product for this range
       // We fetch items and join with orders to filter by restaurant and date
-      const { data: itemsData, error: itemsError } = await supabase
+      const { data: itemsData, error: itemsError } = await supabaseAdmin
         .from('order_items')
         .select('product_id, products(name), orders(created_at)')
         .eq('orders.restaurant_id', restaurantId);
