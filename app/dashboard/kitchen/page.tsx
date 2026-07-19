@@ -76,7 +76,11 @@ export default function KitchenBoard() {
     }
     console.log('[kitchen] fetchOrders con restaurant_id =', restaurantId);
 
-    const { data, error } = await supabase
+    // Usamos supabaseAdmin (service_role) porque la tabla `orders` solo
+    // tiene RLS policy de INSERT público; no hay policy de SELECT para
+    // anon. Los paneles internos (cocina/mesero/admin) leen con
+    // service_role que bypasea RLS.
+    const { data, error } = await supabaseAdmin
       .from('orders')
       .select(`*, restaurant_tables(table_number), order_items(product_id, notes, products(name, description, quick_delivery), quantity)`)
       .eq('restaurant_id', restaurantId)
