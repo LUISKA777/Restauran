@@ -15,6 +15,7 @@ import { HeroSection } from './_components/HeroSection';
 import { CopySection } from './_components/CopySection';
 import { ContactSection } from './_components/ContactSection';
 import { CategoriesSection } from './_components/CategoriesSection';
+import { SecuritySection } from './_components/SecuritySection';
 import { LivePreview } from './_components/LivePreview';
 
 export default function BrandSettingsPage() {
@@ -156,6 +157,10 @@ export default function BrandSettingsPage() {
 
             <details className="group">
               <ContactSection settings={settings} onChange={setSettings} />
+            </details>
+
+            <details className="group">
+              <SecuritySection settings={settings} onChange={setSettings} />
             </details>
 
             <CategoriesSection settings={settings} onChange={setSettings} />

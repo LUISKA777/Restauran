@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { useRestaurantSettings } from '@/lib/useRestaurantSettings';
 
 // Helpers: la tabla `orders` no tiene `is_takeaway` ni `people_count`.
 // El mesero codifica esos datos como prefijo en `customer_name`:
@@ -68,8 +69,29 @@ export default function InvoicesPage() {
   const [cashReceived, setCashReceived] = useState('');
   const [sinpeId, setSinpeId] = useState('');
 
-  // Datos del local para la factura
-  const [restaurant, setRestaurant] = useState<RestaurantInfo | null>(null);
+  // Datos del local para la factura (vía hook compartido)
+  const { settings } = useRestaurantSettings();
+  const [restaurantName, setRestaurantName] = useState('');
+
+  useEffect(() => {
+    // El nombre del local se lee una vez (no cambia en la sesión).
+    // Los settings sí pueden cambiar, los maneja el hook.
+    (async () => {
+      const id = localStorage.getItem('restaurant_id');
+      if (!id) return;
+      const { data } = await supabaseAdmin.from('restaurants').select('name').eq('id', id).single();
+      if (data?.name) setRestaurantName(data.name);
+    })();
+  }, []);
+
+  const restaurant: RestaurantInfo | null = {
+    id: '',
+    name: restaurantName,
+    settings: {
+      logoUrl: settings?.logoUrl || '',
+      contact: settings?.contact,
+    },
+  };
 
   // Recién pagada (para mostrar la factura)
   const [paidOrder, setPaidOrder] = useState<{

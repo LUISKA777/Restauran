@@ -69,6 +69,14 @@ export interface MenuSettings {
     categoryNavPosition: NavPosition;
     showCategoryBadge: boolean;
   };
+
+  // ─── SECURITY ──────────────────────────────────────────
+  // El PIN de acceso al rol Administrador se pide en /dashboard/role-selection
+  // cuando el usuario hace click en la card de "Administrador". Si `adminPin`
+  // está vacío, el admin entra sin PIN extra (comportamiento actual).
+  security: {
+    adminPin: string;
+  };
 }
 
 // Defaults: replican EXACTAMENTE el comportamiento actual del menú.
@@ -126,6 +134,10 @@ export function getDefaultSettings(): MenuSettings {
       categoryNavPosition: 'sticky-top',
       showCategoryBadge: true,
     },
+
+    security: {
+      adminPin: '', // '' = sin PIN
+    },
   };
 }
 
@@ -146,5 +158,6 @@ export function mergeSettings(raw: any): MenuSettings {
     copy: { ...defaults.copy, ...safeObj(raw.copy) },
     contact: { ...defaults.contact, ...safeObj(raw.contact) },
     layout: { ...defaults.layout, ...safeObj(raw.layout) },
+    security: { ...defaults.security, ...safeObj(raw.security) },
   };
 }
