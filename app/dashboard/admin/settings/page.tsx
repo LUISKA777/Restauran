@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Save, Palette, Sparkles } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { getDefaultSettings, mergeSettings, type MenuSettings } from '@/types/menuSettings';
 
 import { ThemePresetsSection } from './_components/ThemePresetsSection';
@@ -54,19 +55,41 @@ export default function BrandSettingsPage() {
     const restaurantId = localStorage.getItem('restaurant_id');
     if (!restaurantId) {
       setSaving(false);
+      alert('No hay sesión activa. Vuelve a iniciar sesión como restaurante.');
+      router.push('/login');
       return;
     }
-    try {
-      const { error } = await supabase
-        .from('restaurants')
-        .update({ settings })
-        .eq('id', restaurantId);
 
-      if (error) throw error;
+    // Limpiar antes de enviar: settings no debe tener valores `undefined`
+    // ni referencias circulares. Aplicamos mergeSettings para garantizar shape.
+    const cleaned = mergeSettings(settings);
+    const json = JSON.stringify(cleaned);
+    console.log('[saveSettings] payload size:', json.length, 'bytes');
+
+    try {
+      // Usamos supabaseAdmin (service_role) porque la policy RLS de la tabla
+      // `restaurants` solo permite SELECT público; los UPDATE/INSERT deben
+      // pasar por service_role. Mismo patrón que /superadmin.
+      const { data, error } = await supabaseAdmin
+        .from('restaurants')
+        .update({ settings: cleaned })
+        .eq('id', restaurantId)
+        .select('id, settings');
+
+      if (error) {
+        console.error('[saveSettings] Supabase error:', error);
+        alert(`Error al guardar: ${error.message}\n\nCódigo: ${error.code || 'N/A'}\nDetalles: ${error.details || 'N/A'}`);
+        return;
+      }
+      if (!data || data.length === 0) {
+        alert('No se actualizó ninguna fila. Verifica que el restaurante exista y vuelve a intentar.');
+        return;
+      }
+      console.log('[saveSettings] OK, rows updated:', data.length);
       alert('Configuración guardada con éxito ✨');
-    } catch (err) {
-      console.error('Error saving settings:', err);
-      alert('Error al guardar la configuración');
+    } catch (err: any) {
+      console.error('[saveSettings] Exception:', err);
+      alert(`Error al guardar: ${err?.message || 'Error desconocido'}`);
     } finally {
       setSaving(false);
     }
