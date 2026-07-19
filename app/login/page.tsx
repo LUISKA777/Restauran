@@ -57,6 +57,8 @@ export default function LoginPage() {
         .eq('general_password', password)
         .single();
 
+      console.log('[login] intento login restaurante:', { name: restaurantName, ok: !supabaseError, id: data?.id });
+
       if (supabaseError || !data) {
         setError('Credenciales incorrectas. Por favor, verifica el nombre del restaurante y la contraseña.');
         setLoading(false);

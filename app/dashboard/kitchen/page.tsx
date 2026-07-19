@@ -70,7 +70,11 @@ export default function KitchenBoard() {
 
   async function fetchOrders() {
     const restaurantId = localStorage.getItem('restaurant_id');
-    if (!restaurantId) return;
+    if (!restaurantId) {
+      console.error('[kitchen] restaurant_id es null/vacío en localStorage. ¿Hiciste login?');
+      return;
+    }
+    console.log('[kitchen] fetchOrders con restaurant_id =', restaurantId);
 
     const { data, error } = await supabase
       .from('orders')
@@ -80,8 +84,12 @@ export default function KitchenBoard() {
       .neq('status', 'cancelled')
       .order('created_at', { ascending: true });
 
-    if (error) console.error('Error fetching orders:', error);
-    else if (data) setOrders(data);
+    if (error) {
+      console.error('[kitchen] Error en query:', error);
+    } else {
+      console.log('[kitchen] Query OK, encontrados:', data?.length || 0, 'pedidos');
+    }
+    if (data) setOrders(data);
     setLoading(false);
   }
 
