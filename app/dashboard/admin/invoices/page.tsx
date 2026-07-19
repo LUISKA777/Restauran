@@ -15,6 +15,23 @@ import {
 import { supabase } from '@/lib/supabase';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
+// Helpers: la tabla `orders` no tiene `is_takeaway` ni `people_count`.
+// El mesero codifica esos datos como prefijo en `customer_name`:
+//   "🥡 2x · Juan" → takeaway=true, 2 personas, nombre "Juan"
+function isTakeawayOrder(order: any): boolean {
+  return (order?.customer_name || '').startsWith('🥡');
+}
+function peopleCountFromName(order: any): number {
+  const m = (order?.customer_name || '').match(/^(\d+)x · /);
+  return m ? parseInt(m[1], 10) : 1;
+}
+function cleanCustomerName(order: any): string {
+  return (order?.customer_name || '')
+    .replace(/^🥡\s*/, '')
+    .replace(/^\d+x · /, '')
+    .trim() || 'Anónimo';
+}
+
 interface Order {
   id: string;
   total_price: number;
@@ -177,7 +194,7 @@ export default function InvoicesPage() {
                       <span className="badge-brand mb-1">
                         {order.restaurant_tables ? `Mesa ${order.restaurant_tables.table_number}` : '🥡 Para Llevar'}
                       </span>
-                      <h3 className="text-lg font-bold text-ink-900 truncate">{order.customer_name || 'Anónimo'}</h3>
+                      <h3 className="text-lg font-bold text-ink-900 truncate">{cleanCustomerName(order)}</h3>
                     </div>
                     <div className="text-right shrink-0 ml-3">
                       <p className="text-xl font-black text-ink-900">₡{order.total_price.toFixed(0)}</p>

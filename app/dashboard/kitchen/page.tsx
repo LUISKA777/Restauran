@@ -5,6 +5,23 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { Clock, CheckCircle, Flame, Package, Truck, RotateCcw, Users, UtensilsCrossed, XCircle, Banknote, Bell } from 'lucide-react';
 import { Order, OrderStatus } from '@/types/order';
 
+// Helpers: la tabla `orders` no tiene `is_takeaway` ni `people_count`.
+// El mesero codifica esos datos como prefijo en `customer_name`:
+//   "🥡 2x · Juan" → takeaway=true, 2 personas, nombre "Juan"
+function isTakeawayOrder(order: any): boolean {
+  return (order?.customer_name || '').startsWith('🥡');
+}
+function peopleCountFromName(order: any): number {
+  const m = (order?.customer_name || '').match(/^(\d+)x · /);
+  return m ? parseInt(m[1], 10) : 1;
+}
+function cleanCustomerName(order: any): string {
+  return (order?.customer_name || '')
+    .replace(/^🥡\s*/, '')
+    .replace(/^\d+x · /, '')
+    .trim() || 'Anónimo';
+}
+
 const STATUS_COLORS: Record<OrderStatus, { bg: string; text: string; icon: any }> = {
   pending: { bg: 'bg-gray-100', text: 'text-gray-600', icon: Clock },
   confirmed: { bg: 'bg-blue-100', text: 'text-blue-600', icon: CheckCircle },
@@ -133,7 +150,7 @@ export default function KitchenBoard() {
                     <div className="flex items-center gap-2 font-black text-sm">
                       <Icon size={18} />
                       <span>
-                        {order.is_takeaway ? (
+                        {isTakeawayOrder(order) ? (
                           <span className="flex items-center gap-1">
                             <UtensilsCrossed size={14} /> Para Llevar
                           </span>
@@ -151,11 +168,11 @@ export default function KitchenBoard() {
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-ink-500">Cliente:</span>
-                        <span className="text-sm font-bold text-ink-900">{order.customer_name || 'Anónimo'}</span>
+                        <span className="text-sm font-bold text-ink-900">{cleanCustomerName(order)}</span>
                       </div>
                       <div className="flex items-center gap-1 text-xs text-ink-400 font-medium">
                         <Users size={12} />
-                        <span>{order.people_count || 1} pers.</span>
+                        <span>{peopleCountFromName(order)} pers.</span>
                       </div>
                     </div>
 

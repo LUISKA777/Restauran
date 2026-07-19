@@ -6,6 +6,23 @@ import { useRouter } from 'next/navigation';
 import { Plus, ShoppingBag, User, Users, Table, Send, RotateCcw, X, Package, Bell, CheckCircle2, Receipt } from 'lucide-react';
 import { Order } from '@/types/order';
 
+// Helpers para derivar flags desde customer_name (la tabla `orders` no
+// tiene columnas `is_takeaway` ni `people_count`; el mesero codifica esos
+// datos como prefijo en customer_name: "🥡 2x · Juan").
+function isTakeawayOrder(order: any): boolean {
+  return (order?.customer_name || '').startsWith('🥡');
+}
+function peopleCountFromName(order: any): number {
+  const m = (order?.customer_name || '').match(/^(\d+)x · /);
+  return m ? parseInt(m[1], 10) : 1;
+}
+function cleanCustomerName(order: any): string {
+  return (order?.customer_name || '')
+    .replace(/^🥡\s*/, '')
+    .replace(/^\d+x · /, '')
+    .trim() || 'Anónimo';
+}
+
 interface Product {
   id: string;
   name: string;
@@ -252,49 +269,55 @@ export default function WaiterPanel() {
             .eq('id', orderId);
 
           if (updateError) {
-            alert('Error al actualizar el pedido existente');
+            console.error('[sendOrder] update existing order error:', updateError);
+            alert(`Error al actualizar el pedido existente: ${updateError.message}`);
             return;
           }
         } else {
           // No active order, create new one
+          // NOTA: la tabla `orders` no tiene columnas `is_takeaway` ni
+          // `people_count`. La distinción mesa vs takeaway se hace con
+          // `table_id` (null = takeaway). El conteo de personas se guarda
+          // en `customer_name` con un prefijo "2x · " para que sea visible
+          // en cocina y en facturas.
+          const peopleTag = peopleCount > 1 ? `${peopleCount}x · ` : '';
           const { data: newOrder, error: newOrderError } = await supabaseAdmin
             .from('orders')
             .insert({
               restaurant_id: restaurantId,
               table_id: selectedTable,
-              customer_name: customerName,
+              customer_name: `${peopleTag}${customerName}`.trim(),
               status: 'confirmed',
               total_price: total,
-              is_takeaway: false,
-              people_count: peopleCount
             })
             .select()
             .single();
 
           if (newOrderError) {
-            alert('Error al crear el pedido');
+            console.error('[sendOrder] create mesa order error:', newOrderError);
+            alert(`Error al crear el pedido: ${newOrderError.message}`);
             return;
           }
           orderId = newOrder.id;
         }
       } else {
-        // Takeaway always creates a new order
+        // Takeaway: table_id=null, prefijo "🥡" en el nombre
+        const peopleTag = peopleCount > 1 ? `${peopleCount}x · ` : '';
         const { data: newOrder, error: newOrderError } = await supabaseAdmin
           .from('orders')
           .insert({
             restaurant_id: restaurantId,
             table_id: null,
-            customer_name: customerName,
+            customer_name: `🥡 ${peopleTag}${customerName}`.trim(),
             status: 'confirmed',
             total_price: total,
-            is_takeaway: true,
-            people_count: peopleCount
           })
           .select()
           .single();
 
         if (newOrderError) {
-          alert('Error al crear el pedido');
+          console.error('[sendOrder] create takeaway order error:', newOrderError);
+          alert(`Error al crear el pedido: ${newOrderError.message}`);
           return;
         }
         orderId = newOrder.id;
@@ -310,7 +333,8 @@ export default function WaiterPanel() {
       const { error: itemsError } = await supabaseAdmin.from('order_items').insert(orderItems);
 
       if (itemsError) {
-        alert('Error al agregar productos al pedido');
+        console.error('[sendOrder] insert items error:', itemsError);
+        alert(`Error al agregar productos al pedido: ${itemsError.message}`);
       } else {
         alert('Pedido enviado a cocina con éxito!');
         setCart([]);
@@ -405,12 +429,12 @@ export default function WaiterPanel() {
                   <div className="flex justify-between items-start">
                     <div className="min-w-0 flex-1">
                       <span className="badge-brand">
-                        {order.is_takeaway ? '🥡 Para Llevar' : `Mesa ${order.restaurant_tables?.table_number || 'N/A'}`}
+                        {isTakeawayOrder(order) ? '🥡 Para Llevar' : `Mesa ${order.restaurant_tables?.table_number || 'N/A'}`}
                       </span>
-                      <h3 className="font-bold text-ink-900 mt-1 truncate">{order.customer_name || 'Anónimo'}</h3>
+                      <h3 className="font-bold text-ink-900 mt-1 truncate">{cleanCustomerName(order)}</h3>
                     </div>
                     <div className="flex items-center gap-1 text-[10px] text-ink-500 font-bold shrink-0 ml-2">
-                      <Users size={11} /> {order.people_count} pers.
+                      <Users size={11} /> {peopleCountFromName(order)} pers.
                     </div>
                   </div>
 
@@ -457,12 +481,12 @@ export default function WaiterPanel() {
                   <div className="flex justify-between items-start">
                     <div className="min-w-0 flex-1">
                       <span className="badge-success">
-                        {order.is_takeaway ? '🥡 Para Llevar' : `Mesa ${order.restaurant_tables?.table_number || 'N/A'}`}
+                        {isTakeawayOrder(order) ? '🥡 Para Llevar' : `Mesa ${order.restaurant_tables?.table_number || 'N/A'}`}
                       </span>
-                      <h3 className="font-bold text-ink-900 mt-1 truncate">{order.customer_name || 'Anónimo'}</h3>
+                      <h3 className="font-bold text-ink-900 mt-1 truncate">{cleanCustomerName(order)}</h3>
                     </div>
                     <div className="flex items-center gap-1 text-[10px] text-ink-500 font-bold shrink-0 ml-2">
-                      <Users size={11} /> {order.people_count} pers.
+                      <Users size={11} /> {peopleCountFromName(order)} pers.
                     </div>
                   </div>
 
