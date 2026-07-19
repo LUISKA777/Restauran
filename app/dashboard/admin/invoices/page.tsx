@@ -37,6 +37,7 @@ interface Order {
   total_price: number;
   status: string;
   customer_name: string;
+  payment_method: string | null;
   restaurant_tables: { table_number: number } | null;
   order_items: {
     product_id: string;
@@ -65,12 +66,15 @@ export default function InvoicesPage() {
     const restaurantId = localStorage.getItem('restaurant_id');
     if (!restaurantId) return;
 
+    // La tabla `orders` no tiene columna `is_paid`. Una factura pendiente
+    // es una orden con status='delivered' y payment_method IS NULL.
+    // (Las pagadas tienen payment_method = 'Cash' | 'SINPE' | 'Card'.)
     const { data, error } = await supabase
       .from('orders')
       .select(`*, restaurant_tables(table_number), order_items(product_id, quantity, products(name, price))`)
       .eq('restaurant_id', restaurantId)
-      .eq('is_paid', false)
-      .neq('status', 'cancelled')
+      .eq('status', 'delivered')
+      .is('payment_method', null)
       .order('created_at', { ascending: true });
 
     if (error) console.error('Error fetching invoices:', error);
@@ -81,10 +85,13 @@ export default function InvoicesPage() {
   async function processPayment() {
     if (!selectedOrder) return;
 
+    // Marcamos como pagado seteando `payment_method` (la tabla `orders` no
+    // tiene columna `is_paid`). También pasamos a status='paid' para
+    // reflejar el ciclo de vida completo.
     const { error } = await supabaseAdmin
       .from('orders')
       .update({
-        is_paid: true,
+        status: 'paid',
         payment_method: paymentMethod,
         updated_at: new Date().toISOString()
       })
