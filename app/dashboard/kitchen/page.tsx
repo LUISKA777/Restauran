@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import { Clock, CheckCircle, Flame, Package, Truck, RotateCcw, Users, UtensilsCrossed, XCircle, Banknote, Bell } from 'lucide-react';
+import { Clock, CheckCircle, Flame, Package, Truck, RotateCcw, Users, UtensilsCrossed, XCircle, Banknote, Bell, RefreshCw } from 'lucide-react';
 import { Order, OrderStatus } from '@/types/order';
 
 // Helpers: la tabla `orders` no tiene `is_takeaway` ni `people_count`.
@@ -55,8 +55,16 @@ export default function KitchenBoard() {
       })
       .subscribe();
 
+    // Polling cada 15s como fallback (Realtime puede no estar habilitado
+    // en el proyecto Supabase). Garantiza que pedidos nuevos aparezcan
+    // aunque Realtime no esté disponible.
+    const poll = setInterval(() => {
+      fetchOrders();
+    }, 15000);
+
     return () => {
       supabase.removeChannel(channel);
+      clearInterval(poll);
     };
   }, []);
 
@@ -114,6 +122,9 @@ export default function KitchenBoard() {
             <p className="text-ink-500 mt-1">{activeOrders.length} pedidos activos en tiempo real</p>
           </div>
           <div className="flex gap-2">
+            <button onClick={() => fetchOrders()} className="btn-secondary" title="Refrescar pedidos">
+              <RefreshCw size={16} /> Refrescar
+            </button>
             <button onClick={playBell} className="btn-secondary">
               <Bell size={16} /> Probar Timbre
             </button>
@@ -159,9 +170,16 @@ export default function KitchenBoard() {
                         )}
                       </span>
                     </div>
-                    <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/60">
-                      {order.status}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      {order.created_at && (
+                        <span className="text-[10px] font-bold opacity-70">
+                          {new Date(order.created_at).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      )}
+                      <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/60">
+                        {order.status}
+                      </span>
+                    </div>
                   </div>
 
                   <div className="p-4 space-y-3 flex-grow">
