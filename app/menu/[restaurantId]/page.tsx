@@ -15,6 +15,11 @@ export default async function MenuPage({ params, searchParams }: { params: Promi
     .single();
 
   if (restaurantError || !restaurant) {
+    // En producción NO mostramos el mensaje crudo de Supabase (puede contener
+    // tokens o info sensible). Solo lo logueamos en consola.
+    if (restaurantError) {
+      console.error('[MenuPage] Error fetching restaurant:', restaurantError);
+    }
     return (
       <div className="min-h-screen flex items-center justify-center p-6 text-center">
         <div className="max-w-md space-y-4 bg-white p-8 rounded-3xl border border-red-200 shadow-sm">
@@ -26,8 +31,8 @@ export default async function MenuPage({ params, searchParams }: { params: Promi
             <p className="text-sm font-mono text-red-600 break-all">
               <strong>ID buscado:</strong> {restaurantId}
             </p>
-            <p className="text-sm font-mono text-red-600 break-all">
-              <strong>Error Supabase:</strong> {restaurantError?.message || 'No hay error, pero no se encontró el dato'}
+            <p className="text-sm font-mono text-red-600">
+              <strong>Estado:</strong> {restaurantError ? 'Error de consulta' : 'Sin resultados'}
             </p>
           </div>
         </div>
