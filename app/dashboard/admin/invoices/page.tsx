@@ -105,19 +105,7 @@ export default function InvoicesPage() {
 
   useEffect(() => {
     fetchInvoices();
-    fetchRestaurant();
   }, []);
-
-  async function fetchRestaurant() {
-    const restaurantId = localStorage.getItem('restaurant_id');
-    if (!restaurantId) return;
-    const { data } = await supabaseAdmin
-      .from('restaurants')
-      .select('id, name, settings')
-      .eq('id', restaurantId)
-      .single();
-    if (data) setRestaurant(data);
-  }
 
   async function fetchInvoices() {
     setLoading(true);
